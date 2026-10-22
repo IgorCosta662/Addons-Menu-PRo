@@ -1,0 +1,6 @@
+{
+  "name": "BedrockForge — Criador de Add-On & Menu Survival (Conquistas Ativas)",
+  "description": "Gerador e empacotador de Add-Ons (.mcaddon) com Menu de Utilitários e Cheats via Script API para Minecraft Bedrock 1.21+ sem desativar conquistas ou progressão no modo Sobrevivência.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
