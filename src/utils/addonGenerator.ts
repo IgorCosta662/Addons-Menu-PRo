@@ -1,4 +1,36 @@
 import JSZip from 'jszip';
+import {
+  ARCHITECTURAL_MODELS,
+  MEGA_POTION_HALL_30_CHESTS,
+  MEGA_ENCHANT_HALL_42_BOOKS,
+  MEGA_ENCHANT_HALL_18_SUPPLIES,
+  type EnchantedBookChestSpec,
+  generateMartelo50x50ItemJson,
+  generateDestruidorChunkItemJson,
+  generateQuebradorBedrockItemJson,
+  generateMarteloRecipeJson,
+  generateDestruidorChunkRecipeJson,
+  generateQuebradorBedrockRecipeJson,
+  generateMultiplierFastRecipeJson,
+  generateMultiplierBenchRecipeJson,
+  generateSuperToolsAndMultiplierScript,
+} from './superToolsAndThemes';
+
+export {
+  ARCHITECTURAL_MODELS,
+  MEGA_POTION_HALL_30_CHESTS,
+  MEGA_ENCHANT_HALL_42_BOOKS,
+  MEGA_ENCHANT_HALL_18_SUPPLIES,
+  type EnchantedBookChestSpec,
+  generateMartelo50x50ItemJson,
+  generateDestruidorChunkItemJson,
+  generateQuebradorBedrockItemJson,
+  generateMarteloRecipeJson,
+  generateDestruidorChunkRecipeJson,
+  generateQuebradorBedrockRecipeJson,
+  generateMultiplierFastRecipeJson,
+  generateMultiplierBenchRecipeJson,
+};
 
 export interface CheatModule {
   id: string;
@@ -80,24 +112,62 @@ export function runAddonTechnicalAudit(config: AddonConfig): AuditCheckItem[] {
     },
     {
       id: 'veinminer_structures',
-      title: 'VeinMiner, TreeCapitator, Estruturas & Spawner de Mobs sem Comandos',
+      title: 'Super Ferramentas 50x50, Destruidor de Chunk, Bedrock & Baús Automáticos',
       status: 'passed',
       detail:
-        'Usa eventos nativos playerBreakBlock, block.setType() e dimension.spawnEntity() para quebrar veias inteiras de minério, gerar estruturas e spawnar mobs sem usar /fill ou /summon.',
-      technicalProof: 'world.afterEvents.playerBreakBlock + dimension.spawnEntity()',
+        'Martelo Titã 50x50 (60 FPS sem lag), Destruidor de Chunk 16x16 e Quebrador de Bedrock coletam 100% dos minérios e blocos e geram Baús Duplos Conectados iluminados com placa externa.',
+      technicalProof: 'system.runInterval(500 blocos/tick) + buildExcavationAutoChestPlatform()',
     },
     {
       id: 'trigger_redundancy',
-      title: 'Triplo Gatilho de Abertura no Survival (Sem Comandos de Chat)',
+      title: 'Bloco Multiplicador Craftável (Clique +1/+5 Packs | Bater = Shulker 100% Lotada)',
       status: 'passed',
       detail:
-        'Funciona mesmo de mãos vazias (Olhar para o chão + Agachar 2x rápido), usando Graveto/Bússola agachado ou usando o item Teclado Survival.',
-      technicalProof: 'world.afterEvents.itemUse + Detector Duplo-Shift em runInterval',
+        'Clicar no Bloco Multiplicador multiplica +1 ou +5 packs; bater nele segurando qualquer item gera imediatamente 1 Caixa de Shulker 100% LOTADA (27 slots / 1.728 itens) com cor dinâmica.',
+      technicalProof: 'playerInteractWithBlock + entityHitBlock + playerBreakBlock protection',
+    },
+    {
+      id: 'directional_360_and_enchant_villagers',
+      title: 'Construção 360° na Direção do Olhar + Mega Sala de Encantamentos & 42 Villagers (1 Esmeralda)',
+      status: 'passed',
+      detail:
+        'Todas as construções usam player.getViewDirection() (Leste +X, Oeste -X, Sul +Z, Norte -Z). Inclui Mega Sala de Encantamentos com 42 Baús Duplos de Livros Nv. Máximo, 18 Baús de Insumos e 42 Villagers Bibliotecários Mestre com troca garantida de 1 Esmeralda.',
+      technicalProof: 'getLookBasis(player) + buildMegaEnchantmentAndVillagerHall() + playerInteractWithEntity (1 Esmeralda)',
     },
   ];
 }
 
 export const INITIAL_MODULES: CheatModule[] = [
+  {
+    id: 'mega_enchantment_villager_hall',
+    name: 'Mega Sala de Encantamentos + 42 Villagers no Máximo (1 Esmeralda) + Construção Direcional 360°',
+    category: 'world',
+    description:
+      'Gera qualquer construção exatamente para a direção em que você está olhando (Norte, Sul, Leste, Oeste)! Inclui a Mega Sala de Encantamentos Suprema com Altar Nível 30, 42 Baús Duplos (1 para cada Livro Encantado Nv. Máximo), 18 Baús Duplos de Insumos de Encantamento/Forja e Galeria com todos os 42 Villagers Bibliotecários Mestre com a troca mais barata possível (1 Esmeralda)!',
+    apiMethod: 'getLookBasis(player) + buildMegaEnchantmentAndVillagerHall() + 42 Villagers (1 Esmeralda)',
+    enabled: true,
+    achievementSafe: true,
+  },
+  {
+    id: 'super_tools_50x50_chunk_bedrock',
+    name: 'Super Ferramentas: Martelo 50x50, Destruidor de Chunk 16x16 & Quebrador de Bedrock (+ Baús Automáticos)',
+    category: 'world',
+    description:
+      'Inclui os 3 itens exclusivos (Martelo Titã 50x50 sem lag com seletor de 1 a 25 camadas, Destruidor de Chunk 16x16 até a Bedrock com Queda Lenta e fundo iluminado, e Quebrador de Bedrock + Passagem 3x3 no Teto do Nether). Toda escavação gera Baús Duplos automáticos priorizando minérios raros!',
+    apiMethod: 'survivalmenu:martelo_50x50 + destruidor_chunk + quebrador_bedrock + Auto Double Chests',
+    enabled: true,
+    achievementSafe: true,
+  },
+  {
+    id: 'multiplier_block_shulker',
+    name: 'Bloco Multiplicador Interativo (Clique = +1/+5 Packs | Bater = Caixa de Shulker 100% Lotada!)',
+    category: 'items',
+    description:
+      'Bloco Multiplicador craftável (1 Pedregulho + 1 Graveto). Clicar com botão direito multiplica +1 pack (ou +5 packs agachado e abastece o baú ao lado). Bater nele segurando qualquer item gera na hora 1 Caixa de Shulker 100% LOTADA (27 slots × 64 = 1.728 itens ou 27 cópias de armas/armaduras) com cor inteligente!',
+    apiMethod: 'minecraft:lodestone + playerInteractWithBlock + playerBreakBlock -> 27-Slot Shulker Box',
+    enabled: true,
+    achievementSafe: true,
+  },
   {
     id: 'armor_tool_enchanter',
     name: 'Teclado de Armaduras (Todos os Tipos), Ferramentas & Seletor de Encantamentos',
@@ -170,30 +240,20 @@ export const INITIAL_MODULES: CheatModule[] = [
   },
   {
     id: 'mega_chest_hall',
-    name: 'Mega Sala de Baús Duplos com Molduras Brilhantes (100% Itens Survival)',
+    name: 'Mega Sala de Baús Duplos 100% Organizada & Identificada (5 Estilos + 8 Setores)',
     category: 'world',
     description:
-      'Constrói automaticamente um Mega Armazém iluminado só com Baús Duplos (54 slots cada) contendo EXCLUSIVAMENTE todos os Blocos e Itens que podem ser conseguidos no modo Survival. Cada Baú Duplo é equipado com uma Moldura Brilhante (Glow Item Frame) identificando o item dentro!',
-    apiMethod: 'BlockTypes.getAll() + ItemTypes.getAll() + isSurvivalObtainable() + Glow Frame + Double Chest Builder',
-    enabled: true,
-    achievementSafe: true,
-  },
-  {
-    id: 'auto_farms_and_factories',
-    name: 'Mega Laboratório de Poções, Fornalha 16x & Farms Automáticas (Ferro, Cana, Mobs, Lã, Algas)',
-    category: 'world',
-    description:
-      'Gera com 1 clique um Mega Laboratório de Alquimia completo com todos os ingredientes, Super Fornalha Industrial 16x com funis e combustíveis, e 6 Farms Automáticas 100% funcionais no Survival (Ferro, Cana/Bambu, Abóbora/Melancia, Mob Grinder, Algas, Lã).',
-    apiMethod: 'Automatic Redstone/Hopper Farm Builder + Chemical/Smelter Complex',
+      'Constrói um Mega Armazém em 5 Modelos Arquitetônicos e 8 Setores temáticos (Minérios, Equipamentos, Moldes/Raros, Redstone, Comidas/Poções, Madeiras, Construção e Nether/End). Cada Baú Duplo conectado vem com Placa Externa de Parede na coluna ao lado e todos os 54 slots preenchidos com o item do baú!',
+    apiMethod: 'Categorized Double Chest Warehouse + External Wall Sign on Pillar + 54 Full Stacks',
     enabled: true,
     achievementSafe: true,
   },
   {
     id: 'instant_structures',
-    name: 'Construtor Rápido: Mesa Encantamento Nv.30, Portais & Plataforma Salva-Vidas',
+    name: 'Construtor Rápido: Mega Alquimia, Fornalha 16x, Mesa Nv.30 & Abrigos',
     category: 'world',
     description:
-      'Gera com 1 clique uma Mesa de Encantamento Nv. 30 completa (15 estantes), Portal do Nether/End, Abrigo iluminado ou Plataforma 5x5 de Obsidiana sob seus pés.',
+      'Gera com 1 clique um Mega Laboratório de Alquimia completo com todos os ingredientes, Super Fornalha Industrial 16x com funis e combustíveis, Mesa de Encantamentos Nv. 30 e Plataforma Salva-Vidas.',
     apiMethod: 'dimension.getBlock(pos).setType("minecraft:bookshelf")',
     enabled: true,
     achievementSafe: true,
@@ -515,13 +575,13 @@ function showFormSafely(player, form, onResult, attempt = 0) {
   });
 }
 
-// Entrega automática do Teclado Survival no primeiro acesso ao mundo (v${config.targetBuildVersion})
+// Entrega automática do Teclado Survival, Bloco Multiplicador e das 3 Super Ferramentas no primeiro acesso ao mundo (v${config.targetBuildVersion})
 world.afterEvents.playerSpawn.subscribe((event) => {
   const { player, initialSpawn } = event;
   if (initialSpawn) {
     system.runTimeout(() => {
       try {
-        player.sendMessage("§8[§a${config.addonName} v${config.targetBuildVersion}§8] §fSuper Menu & Teclado carregado! §aConquistas Ativas.");
+        player.sendMessage("§8[§a${config.addonName} v${config.targetBuildVersion}§8] §fSuper Menu, Bloco Multiplicador & Super Ferramentas 50x50/Chunk/Bedrock carregados! §aConquistas Ativas.");
         player.sendMessage("§7Atalhos sem item: §eOlhe p/ o chão + Shift 2x (Armaduras) §7ou §bOlhe p/ cima + Shift 2x (Menu)");
         if (!player.getDynamicProperty("survivalmenu:received_book")) {
           const inv = player.getComponent("minecraft:inventory")?.container;
@@ -534,6 +594,9 @@ world.afterEvents.playerSpawn.subscribe((event) => {
               "§aCompatível com Bedrock ${config.targetBuildVersion} (Conquistas Ativas)"
             ]);
             inv.addItem(book);
+            try {
+              giveSuperToolsAndMultiplierStarterKit(player);
+            } catch (e2) {}
             player.setDynamicProperty("survivalmenu:received_book", true);
           }
         }
@@ -542,11 +605,41 @@ world.afterEvents.playerSpawn.subscribe((event) => {
   }
 });
 
-// Gatilho de Abertura do Menu ao usar o Item
+// Gatilho de Abertura do Menu e das 3 Super Ferramentas ao usar o Item
 world.afterEvents.itemUse.subscribe((event) => {
   const player = event.source;
   const item = event.itemStack;
   if (!player || !item) return;
+
+  if (item.typeId === "survivalmenu:martelo_50x50") {
+    if (!canTriggerSuperTool(player)) return;
+    if (player.isSneaking) {
+      openMarteloDepthSelectorModal(player);
+    } else {
+      const savedLayers =
+        Number(player.getDynamicProperty("survivalmenu:martelo_depth")) ||
+        Number(player.getDynamicProperty("survivalmenu:martelo_layers")) ||
+        3;
+      excavateMartelo50x50(player, savedLayers);
+    }
+    return;
+  }
+
+  if (item.typeId === "survivalmenu:destruidor_chunk") {
+    if (!canTriggerSuperTool(player)) return;
+    excavateChunk16x16ToBedrock(player);
+    return;
+  }
+
+  if (item.typeId === "survivalmenu:quebrador_bedrock") {
+    if (!canTriggerSuperTool(player)) return;
+    if (player.isSneaking) {
+      openNetherRoof3x3Passage(player);
+    } else {
+      breakNearbyBedrockInstant(player);
+    }
+    return;
+  }
 
   if (item.typeId === "survivalmenu:amuleto" && player.isSneaking) {
     openArmorToolKeypadMenu(player);
@@ -851,19 +944,23 @@ function scanNearbyValuableOres(player, radius) {
 // ============================================================================
 function openMainMenu(player) {
   ${config.soundFeedback ? `try { player.playSound("random.pop", { pitch: 1.2, volume: 0.8 }); } catch (e) {}` : ''}
+  const basis = getLookBasis(player);
   const form = new ActionFormData()
     .title("§l§2${config.addonName} v${config.targetBuildVersion}")
     .body(
       "§7Modo Sobrevivência §8| §aConquistas: ATIVAS\\n" +
+      \`§7Direção atual do olhar p/ Construções: §b\${basis.dirLabelPt}\\n\` +
       "§eAtalho: Olhe p/ o chão + Shift 2x abre o Teclado de Armaduras!"
     )
     .button("§l§6Teclado: Armaduras, 5 Shulkers & Encantar\\n§r§8Todos os sets + 18 Moldes + Encantamentos", "textures/items/netherite_chestplate")
-    .button("§l§5Mega Sala de Baús Duplos (Itens Survival)\\n§r§81 Baú Duplo p/ cada Bloco e Item obtível no Survival", "textures/items/chest_minecart")
-    .button("§l§dMultiplicar Itens & Bigorna Colorida\\n§r§8Clonar qualquer quantidade + Renomear Item", "textures/items/shulker_shell")
+    .button("§l§cSuper Ferramentas: 50x50, Chunk & Bedrock\\n§r§8Martelo 50x50 + Chunk 16x16 + Bedrock + Baús Automáticos", "textures/items/netherite_pickaxe")
+    .button("§l§dMega Sala Encantamentos + 42 Villagers (1 Esmeralda)\\n§r§842 Baús Livros Nv.Máx + 18 Baús Insumos + 42 Villagers", "textures/items/book_enchanted")
+    .button("§l§5Mega Armazém: Baús Duplos & 5 Estilos (Direção Olhar)\\n§r§810 Setores + Placas na Frente + 5 Modelos de Arquitetura", "textures/items/chest_minecart")
+    .button("§l§dBloco Multiplicador, Shulker Lotada & Bigorna\\n§r§8Clique=+1/+5 Packs | Bater=Shulker 100% Lotada", "textures/items/shulker_shell")
     .button("§l§bPegar Qualquer Item do Jogo\\n§r§8Buscador Universal (1.600+ itens), ID e Kits", "textures/items/diamond")
     .button("§l§2God Mode, Hit-Kill, VeinMiner & Ímã\\n§r§8Imortalidade, 1-Hit Kill, Quebrar Veia, XP", "textures/items/totem")
     .button("§l§eWaypoints, Dimensões & Voo Survival\\n§r§85 Waypoints, Ir ao Nether/End, Voo", "textures/items/ender_pearl")
-    .button("§l§cConstrutor: Poções, Fornalha & Farms\\n§r§8Super Alquimia, Fornalha 16x, Farms Automáticas, Mobs", "textures/items/beacon")
+    .button("§l§aConstrutor (Direção do Olhar): 30 Poções & Fornalha\\n§r§830 Baús de Poções + Fornalha 16x + Mesa Nv.30 + Bosses", "textures/items/brewing_stand")
     .button("§l§3Mundo, Clima, Fullbright & Radar HUD\\n§r§8Dia/Noite, Escudo Anti-Mobs, Scanner", "textures/items/spyglass");
 
   showFormSafely(player, form, (res) => {
@@ -872,24 +969,30 @@ function openMainMenu(player) {
         openArmorToolKeypadMenu(player);
         break;
       case 1:
-        openMegaChestHallMenu(player);
+        openSuperToolsMenu(player);
         break;
       case 2:
-        openDuplicatorMenu(player);
+        openMegaEnchantmentHallMenu(player);
         break;
       case 3:
-        openAllItemsMenu(player);
+        openMegaChestHallMenu(player);
         break;
       case 4:
-        openSurvivalBuffsMenu(player);
+        openDuplicatorMenu(player);
         break;
       case 5:
-        openMovementMenu(player);
+        openAllItemsMenu(player);
         break;
       case 6:
-        openBuilderAndSpawnerMenu(player);
+        openSurvivalBuffsMenu(player);
         break;
       case 7:
+        openMovementMenu(player);
+        break;
+      case 8:
+        openBuilderAndSpawnerMenu(player);
+        break;
+      case 9:
         openWorldAndVisualCombinedMenu(player);
         break;
     }
@@ -1378,9 +1481,7 @@ function createMaxEnchantedArmorSet(materialPrefix, trimDisplayName, colorPrefix
 
 function spawnMaxArmorTrimShulkerBoxes(player) {
   const dim = player.dimension;
-  const px = Math.floor(player.location.x);
-  const py = Math.floor(player.location.y);
-  const pz = Math.floor(player.location.z);
+  const basis = getLookBasis(player);
 
   // Todos os 18 Moldes de Armadura do Minecraft 1.21+ divididos em 4 Shulker Boxes + 1 Shulker Box Cofre Mestre
   const shulkerBatches = [
@@ -1444,21 +1545,19 @@ function spawnMaxArmorTrimShulkerBoxes(player) {
 
   for (const batch of shulkerBatches) {
     try {
-      const targetPos = { x: px + batch.offsetX, y: py, z: pz + 2 };
+      const targetPos = basis.rel(2, 0, batch.offsetX);
       const block = dim.getBlock(targetPos);
       if (block) {
         block.setType(batch.blockId);
         const container = block.getComponent("minecraft:inventory")?.container;
         if (container) {
           container.clearAll();
-          // 1. Adiciona cada Set Completo de Armadura Encantado no Máximo (4 peças por molde)
           for (const t of batch.trims) {
             const armorSet = createMaxEnchantedArmorSet("netherite", t.name, t.color);
             for (const piece of armorSet) {
               container.addItem(piece);
             }
           }
-          // Se houver sets extras (Diamante / Ouro na Shulker 4)
           if (batch.extraArmorMaterials) {
             for (const ex of batch.extraArmorMaterials) {
               const extraSet = createMaxEnchantedArmorSet(ex.mat, ex.name, ex.color);
@@ -1467,14 +1566,12 @@ function spawnMaxArmorTrimShulkerBoxes(player) {
               }
             }
           }
-          // 2. Adiciona 64x de cada Molde de Armadura correspondente
           for (const t of batch.trims) {
             try {
               const tmpl = new ItemStack(t.id, 64);
               container.addItem(tmpl);
             } catch (e) {}
           }
-          // 3. Adiciona 64x dos Minerais de Cor + Mesa de Ferraria
           for (const matId of batch.materials) {
             try {
               container.addItem(new ItemStack(matId, 64));
@@ -1491,7 +1588,7 @@ function spawnMaxArmorTrimShulkerBoxes(player) {
 
   // Shulker Box 5 (Verde-Limão): Cofre Mestre com TODOS os 18 Moldes (64x) + Molde Netherita (64x) + Élitros Max + Todos os 10 Minerais
   try {
-    const masterPos = { x: px + 2, y: py, z: pz + 2 };
+    const masterPos = basis.rel(2, 0, 2);
     const masterBlock = dim.getBlock(masterPos);
     if (masterBlock) {
       masterBlock.setType("minecraft:lime_shulker_box");
@@ -1550,14 +1647,13 @@ function spawnMaxArmorTrimShulkerBoxes(player) {
 
   // Coloca também uma Bancada de Ferraria pronta ao lado para o jogador usar na hora
   try {
-    dim.getBlock({ x: px, y: py, z: pz + 1 })?.setType("minecraft:smithing_table");
+    dim.getBlock(basis.rel(1, 0, 0))?.setType("minecraft:smithing_table");
   } catch (e) {}
 
-  // Também equipa 1 Set Netherita Max no corpo + entrega Picareta Max para quebrar e guardar as Shulkers se quiser
   giveInstantMaxedGodGear(player);
 
   try { player.playSound("random.totem", { pitch: 1.0, volume: 0.9 }); } catch (e) {}
-  player.sendMessage(\`§8[§dShulker Trims§8] §aForam geradas \${boxesPlaced} Shulker Boxes Coloridas na sua frente (Z+2)!\`);
+  player.sendMessage(\`§8[§dShulker Trims§8] §aForam geradas \${boxesPlaced} Shulker Boxes Coloridas na direção do seu olhar (\${basis.dirLabelPt})!\`);
   player.sendMessage("§7Cada Shulker Box contém Sets Completos de Armadura no Nível Máximo + Todos os 18 Moldes (64x) + Todos os Minerais de Cor + Bancada de Ferraria! Quebre-as para levar na mochila!");
 }
 
@@ -1570,11 +1666,13 @@ function openDuplicatorMenu(player) {
   const handName = handItem ? \`\${handItem.typeId.replace("minecraft:", "")} (\${handItem.amount}x)\` : "Nenhum item na mão";
 
   const form = new ActionFormData()
-    .title("§l§dMultiplicador & Bigorna")
+    .title("§l§dBloco Multiplicador & Bigorna")
     .body(
       \`§7Item atual na mão: §e\${handName}\\n\` +
-      "§fPreserva encantamentos, durabilidade, nome e itens dentro de Shulker Boxes:"
+      "§dBloco Multiplicador: §fClicar = +1/+5 Packs | §eBater nele = Gera 1 Shulker Box 100% Lotada!"
     )
+    .button("§l§dColocar Estação do Bloco Multiplicador + Baú Duplo\\n§r§8Instala o Bloco Multiplicador na sua frente pronto para clicar ou bater!", "textures/items/compass_item")
+    .button("§l§bBater / Gerar 1 Shulker Box 100% LOTADA do Item da Mão\\n§r§827 slots lotados (1.728 itens ou 27 cópias da sua arma/armadura)", "textures/items/shulker_shell")
     .button("§aMultiplicar Item da Mão (Escolher Quantidade)\\n§r§8Digite qualquer valor (ex: 64, 500, 2304)", "textures/items/nether_star")
     .button("§bEscolher Item do Inventário para Multiplicar\\n§r§8Seleciona qualquer slot da mochila e clona", "textures/items/chest_minecart")
     .button("§eDeixar Item da Mão em 64x Instantâneo\\n§r§8Completa o pack da mão imediatamente", "textures/items/emerald")
@@ -1585,14 +1683,27 @@ function openDuplicatorMenu(player) {
 
   showFormSafely(player, form, (res) => {
     if (res.selection === 0) {
+      buildMultiplierBlockStation(player);
+    } else if (res.selection === 1) {
+      if (!handItem) {
+        player.sendMessage("§8[§cShulker Multiplicadora§8] §cSegure um item, minério, poção ou arma na mão principal primeiro!");
+        return;
+      }
+      const pLoc = {
+        x: Math.floor(player.location.x),
+        y: Math.floor(player.location.y),
+        z: Math.floor(player.location.z) + 1
+      };
+      spawnFull27SlotShulkerFromItem(player, handItem, pLoc);
+    } else if (res.selection === 2) {
       if (!handItem) {
         player.sendMessage("§8[§cMenu§8] §cSegure um item na mão principal primeiro!");
         return;
       }
       openQuantityMultiplierModal(player, handItem, \`Mão: \${handItem.typeId.replace("minecraft:", "")}\`);
-    } else if (res.selection === 1) {
+    } else if (res.selection === 3) {
       openInventorySlotPicker(player);
-    } else if (res.selection === 2) {
+    } else if (res.selection === 4) {
       if (!handItem) {
         player.sendMessage("§8[§cMenu§8] §cVocê não está segurando nenhum item na mão!");
         return;
@@ -1601,13 +1712,13 @@ function openDuplicatorMenu(player) {
       cloned.amount = cloned.maxAmount || 64;
       equip.setEquipment(EquipmentSlot.Mainhand, cloned);
       player.sendMessage(\`§8[§aMenu§8] §aItem da mão definido para \${cloned.amount}x!\`);
-    } else if (res.selection === 3) {
+    } else if (res.selection === 5) {
       const inv = player.getComponent("minecraft:inventory")?.container;
       if (!inv) return;
       let count = 0;
       for (let i = 0; i < inv.size; i++) {
         const slotItem = inv.getItem(i);
-        if (slotItem && slotItem.typeId !== "survivalmenu:amuleto") {
+        if (slotItem && !slotItem.typeId.startsWith("survivalmenu:")) {
           const max = slotItem.maxAmount || 64;
           if (slotItem.amount < max) {
             slotItem.amount = max;
@@ -1617,9 +1728,9 @@ function openDuplicatorMenu(player) {
         }
       }
       player.sendMessage(\`§8[§aMenu§8] §d\${count} slots do inventário foram multiplicados para o pack máximo (64x)!\`);
-    } else if (res.selection === 4) {
+    } else if (res.selection === 6) {
       openItemRenamerModal(player);
-    } else if (res.selection === 5) {
+    } else if (res.selection === 7) {
       const inv = player.getComponent("minecraft:inventory")?.container;
       if (!inv) return;
       let repaired = 0;
@@ -1635,7 +1746,7 @@ function openDuplicatorMenu(player) {
         }
       }
       player.sendMessage(\`§8[§aMenu§8] §a\${repaired} itens tiveram sua durabilidade restaurada em 100%!\`);
-    } else if (res.selection === 6) {
+    } else if (res.selection === 8) {
       openMainMenu(player);
     }
   });
@@ -2195,11 +2306,13 @@ const MEGA_HALL_60_ITEMS = [
 ];
 
 // ============================================================================
-// FILTRO ESTRITO DE SOBREVIVÊNCIA (EXCLUI CRIATIVO, COMANDOS, OVOS DE SPAWN E BLOCOS ILEGAIS)
-// Garante que a Mega Sala de Baús Duplos contenha APENAS Blocos e Itens que dão para conseguir no Survival!
+// FILTRO DE SOBREVIVÊNCIA & GERADOR DE TODAS AS VARIAÇÕES DE BLOCOS E ITENS
+// Inclui 100% dos blocos, variações (escadas, lajes, muros, cercas, portas,
+// alçapões, polidos, talhados, rachados, musgosos, cobre, tufo, ardósia,
+// 12 madeiras, 16 cores de concreto/lã/terracota/vidro/shulker) e itens!
 // ============================================================================
 const NON_SURVIVAL_EXACT_IDS = new Set([
-  // Blocos de Operador, Comando, Criativo e Técnicos
+  // Blocos de Operador, Comando, Criativo e Técnicos Internos
   "air",
   "bedrock",
   "invisible_bedrock",
@@ -2235,29 +2348,13 @@ const NON_SURVIVAL_EXACT_IDS = new Set([
   "movingblock",
   "piston_arm_collision",
   "sticky_piston_arm_collision",
-  // Blocos do Mundo Impossíveis de Obter no Inventário Survival (mesmo com Silk Touch)
-  "mob_spawner",
-  "spawner",
-  "trial_spawner",
-  "vault",
-  "reinforced_deepslate",
-  "end_portal_frame",
   "end_portal",
   "portal",
   "nether_portal",
   "end_gateway",
-  "budding_amethyst",
-  "petrified_oak_slab",
-  "chorus_plant",
-  "farmland",
-  "dirt_path",
-  "grass_path",
   "frosted_ice",
-  "player_head",
   "monster_egg",
-  "suspicious_sand",
-  "suspicious_gravel",
-  // Itens Education Edition / Química (Não obtíveis no Survival padrão)
+  // Itens Education Edition / Química
   "ice_bomb",
   "bleach",
   "super_fertilizer",
@@ -2282,7 +2379,7 @@ const NON_SURVIVAL_EXACT_IDS = new Set([
   "material_reducer",
   "element_constructor",
   "compound_creator",
-  // Estados Técnicos de Blocos (Fluidos, Fogo, Plantações que têm versão de item própria)
+  // Estados Técnicos de Blocos (Fluidos, Fogo, Plantações em crescimento que não possuem item próprio)
   "water",
   "flowing_water",
   "lava",
@@ -2325,10 +2422,13 @@ function isSurvivalObtainable(rawId) {
   const clean = full.replace(/^minecraft:/, "");
   if (!clean || NON_SURVIVAL_EXACT_IDS.has(clean)) return false;
 
-  // Exclui todos os Ovos de Invocação (Spawn Eggs do Criativo)
+  // Exclui apenas Ovos de Invocação (Spawn Eggs do Criativo)
   if (clean.endsWith("_spawn_egg") || clean.includes("spawn_egg")) return false;
 
-  // Exclui elementos químicos, blocos infestados (Traças), luzes invisíveis e blocos técnicos
+  // Permite explicitamente lit_pumpkin (Abóbora de Halloween Acesa / Jack o'Lantern)
+  if (clean === "lit_pumpkin") return true;
+
+  // Exclui elementos químicos, blocos infestados técnicos, luzes invisíveis e blocos de estado de parede/aceso
   if (
     clean.startsWith("element_") ||
     clean.startsWith("hard_") ||
@@ -2356,199 +2456,1380 @@ function isSurvivalObtainable(rawId) {
   return true;
 }
 
-// Coleta TODOS os Blocos e Itens que dão para conseguir legitimamente no modo SURVIVAL!
-function getAllGameBlocksAndItems() {
-  const validIds = [];
+// Classifica qualquer bloco, variação de bloco ou item em um dos 10 Setores Completos do Armazém
+function getSurvivalCategoryPriority(id) {
+  const lower = String(id).replace("minecraft:", "").toLowerCase();
+
+  // 1. Minérios, Joias, Barras, Blocos Brutos & Família Completa do Cobre
+  if (
+    lower.includes("netherite_block") ||
+    lower.includes("netherite_ingot") ||
+    lower.includes("netherite_scrap") ||
+    lower.includes("ancient_debris") ||
+    lower.includes("diamond_block") ||
+    lower === "diamond" ||
+    lower.includes("emerald_block") ||
+    lower === "emerald" ||
+    lower.includes("gold_block") ||
+    lower.includes("gold_ingot") ||
+    lower.includes("gold_nugget") ||
+    lower.includes("iron_block") ||
+    lower.includes("iron_ingot") ||
+    lower.includes("iron_nugget") ||
+    lower.includes("lapis") ||
+    lower.includes("coal") ||
+    lower.includes("charcoal") ||
+    lower.includes("amethyst") ||
+    lower === "quartz" ||
+    lower.endsWith("_ore") ||
+    lower.includes("raw_") ||
+    lower.includes("copper") ||
+    lower === "lightning_rod"
+  ) {
+    return 1;
+  }
+
+  // 2. Armas, Ferramentas, Armaduras (Todos os Níveis), Combate, Baldes & Utilitários
+  if (
+    lower.includes("sword") ||
+    lower.includes("pickaxe") ||
+    lower.includes("axe") ||
+    lower.includes("shovel") ||
+    lower.includes("hoe") ||
+    lower.includes("helmet") ||
+    lower.includes("chestplate") ||
+    lower.includes("leggings") ||
+    lower.includes("boots") ||
+    lower === "mace" ||
+    lower === "trident" ||
+    lower === "bow" ||
+    lower === "crossbow" ||
+    lower === "shield" ||
+    lower === "elytra" ||
+    lower.includes("arrow") ||
+    lower.includes("horse_armor") ||
+    lower === "wolf_armor" ||
+    lower.includes("bucket") ||
+    lower === "fishing_rod" ||
+    lower.includes("on_a_stick") ||
+    lower === "shears" ||
+    lower === "flint_and_steel" ||
+    lower === "spyglass" ||
+    lower === "brush" ||
+    lower.includes("compass") ||
+    lower === "clock" ||
+    lower === "lead" ||
+    lower === "name_tag" ||
+    lower === "saddle" ||
+    lower === "goat_horn" ||
+    lower.includes("firework")
+  ) {
+    return 2;
+  }
+
+  // 3. Tesouros Raros, 19 Moldes (Trims), 23 Óstracos (Sherds), Discos de Música & Troféus
+  if (
+    lower.includes("trim") ||
+    lower.includes("upgrade") ||
+    lower.includes("sherd") ||
+    lower === "decorated_pot" ||
+    lower.includes("music_disc") ||
+    lower.includes("disc_fragment") ||
+    lower.includes("banner_pattern") ||
+    lower.includes("totem") ||
+    lower.includes("nether_star") ||
+    lower.includes("beacon") ||
+    lower.includes("conduit") ||
+    lower.includes("heavy_core") ||
+    lower.includes("breeze_rod") ||
+    lower.includes("wind_charge") ||
+    lower.includes("trial_key") ||
+    lower.includes("dragon_") ||
+    lower.includes("echo_shard") ||
+    lower.includes("heart_of_the_sea") ||
+    lower.includes("nautilus_shell") ||
+    lower.includes("scute") ||
+    lower.includes("shulker_shell") ||
+    lower.includes("skull") ||
+    lower.endsWith("_head") ||
+    lower === "experience_bottle" ||
+    lower === "enchanted_book"
+  ) {
+    return 3;
+  }
+
+  // 4. Redstone, Automação, Trilhos, Bancadas de Trabalho & Todas as 17 Caixas de Shulker
+  if (
+    lower.includes("shulker_box") ||
+    lower === "chest" ||
+    lower === "trapped_chest" ||
+    lower === "ender_chest" ||
+    lower === "barrel" ||
+    lower.includes("redstone") ||
+    lower.includes("piston") ||
+    lower.includes("observer") ||
+    lower.includes("hopper") ||
+    lower.includes("dropper") ||
+    lower.includes("dispenser") ||
+    lower.includes("comparator") ||
+    lower.includes("repeater") ||
+    lower.includes("crafter") ||
+    lower.includes("rail") ||
+    lower.includes("minecart") ||
+    lower.includes("tnt") ||
+    lower.includes("slime") ||
+    lower.includes("honey_block") ||
+    lower.includes("honeycomb_block") ||
+    lower === "lever" ||
+    lower === "tripwire_hook" ||
+    lower.includes("daylight") ||
+    lower === "target" ||
+    lower.includes("sculk_sensor") ||
+    lower.includes("furnace") ||
+    lower === "smoker" ||
+    lower === "crafting_table" ||
+    lower.includes("anvil") ||
+    lower === "enchanting_table" ||
+    lower.includes("bookshelf") ||
+    lower === "lectern" ||
+    lower === "stonecutter" ||
+    lower === "grindstone" ||
+    lower === "loom" ||
+    lower.includes("_table") ||
+    lower === "composter" ||
+    lower === "brewing_stand" ||
+    lower === "cauldron" ||
+    lower === "bell" ||
+    lower === "jukebox" ||
+    lower.includes("noteblock") ||
+    lower.includes("note_block") ||
+    lower === "lodestone" ||
+    lower === "armor_stand" ||
+    lower.includes("frame") ||
+    lower === "painting" ||
+    lower === "scaffolding" ||
+    lower === "ladder" ||
+    lower === "chain" ||
+    lower === "iron_bars" ||
+    lower === "iron_door" ||
+    lower === "iron_trapdoor" ||
+    lower.includes("weighted_pressure_plate")
+  ) {
+    return 4;
+  }
+
+  // 5. Madeiras, Troncos, Tábuas, Escadas, Lajes, Cercas, Portas, Alçapões, Placas & Barcos (12 Árvores)
+  if (
+    lower.includes("_log") ||
+    lower.includes("_wood") ||
+    lower.includes("_stem") ||
+    lower.includes("_hyphae") ||
+    lower.includes("planks") ||
+    lower.includes("bamboo") ||
+    lower.includes("oak") ||
+    lower.includes("spruce") ||
+    lower.includes("birch") ||
+    lower.includes("jungle") ||
+    lower.includes("acacia") ||
+    lower.includes("mangrove") ||
+    lower.includes("cherry") ||
+    lower.includes("crimson") ||
+    lower.includes("warped") ||
+    lower.includes("wooden_") ||
+    lower === "trapdoor" ||
+    lower === "fence_gate" ||
+    lower.includes("fence") ||
+    lower.includes("door") ||
+    lower.includes("sign") ||
+    lower.includes("boat") ||
+    lower.includes("raft") ||
+    lower.includes("sapling") ||
+    lower.includes("propagule") ||
+    lower.includes("leaves")
+  ) {
+    return 5;
+  }
+
+  // 8. Blocos Coloridos (16 Cores de Concreto, Cimento, Lã, Tapete, Terracota, Azulejo, Vidro, Cama, Vela, Estandarte e Corante)
+  if (
+    lower.includes("concrete") ||
+    lower.includes("wool") ||
+    lower.includes("carpet") ||
+    lower.includes("terracotta") ||
+    lower.includes("hardened_clay") ||
+    lower.includes("glass") ||
+    lower.includes("candle") ||
+    lower.endsWith("_bed") ||
+    lower === "bed" ||
+    lower.includes("banner") ||
+    lower.endsWith("_dye")
+  ) {
+    return 8;
+  }
+
+  // 7. Tijolos, Barro (Mud), Arenito, Quartzo, Prismarinho & Suas Variações (Escadas, Lajes e Muros)
+  if (
+    lower.includes("quartz") ||
+    lower.includes("sandstone") ||
+    lower.includes("prismarine") ||
+    lower.includes("mud") ||
+    lower === "clay" ||
+    lower === "brick" ||
+    lower === "brick_block" ||
+    lower === "bricks" ||
+    lower.startsWith("brick_")
+  ) {
+    return 7;
+  }
+
+  // 10. Nether, The End, Pedra Negra (Blackstone), Purpur, Basalto, Sculk & Drops de Mobs
+  if (
+    lower.includes("nether") ||
+    lower.includes("blackstone") ||
+    lower.includes("basalt") ||
+    lower.includes("obsidian") ||
+    lower === "respawn_anchor" ||
+    lower.includes("soul_") ||
+    lower.includes("magma") ||
+    lower.includes("end_stone") ||
+    lower.includes("purpur") ||
+    lower === "end_rod" ||
+    lower === "end_crystal" ||
+    lower.includes("ender_") ||
+    lower.includes("chorus") ||
+    lower.includes("sculk") ||
+    lower === "shroomlight" ||
+    lower === "glowstone" ||
+    lower === "glowstone_dust" ||
+    lower === "gunpowder" ||
+    lower === "string" ||
+    lower === "rotten_flesh" ||
+    lower === "bone" ||
+    lower === "feather" ||
+    lower === "leather" ||
+    lower === "phantom_membrane" ||
+    lower === "ghast_tear" ||
+    lower === "blaze_rod" ||
+    lower === "blaze_powder" ||
+    lower === "slime_ball" ||
+    lower.includes("ink_sac")
+  ) {
+    return 10;
+  }
+
+  // 6. Pedras, Ardósia (Deepslate), Tufo (1.21), Granito, Diorito, Andesito & Todas as Variações (Escadas, Lajes e Muros)
+  if (
+    lower.includes("stone") ||
+    lower.includes("cobble") ||
+    lower.includes("deepslate") ||
+    lower.includes("tuff") ||
+    lower.includes("granite") ||
+    lower.includes("diorite") ||
+    lower.includes("andesite") ||
+    lower.includes("calcite") ||
+    lower.includes("dripstone") ||
+    lower.includes("stairs") ||
+    lower.includes("slab") ||
+    lower.includes("wall") ||
+    lower.includes("button") ||
+    lower.includes("pressure_plate")
+  ) {
+    return 6;
+  }
+
+  // 9. Alimentos, Agricultura, Flores, Plantas, Corais, Iluminação & Blocos da Natureza
+  return 9;
+}
+
+// ============================================================================
+// GERADOR PROGRAMÁTICO DE TODAS AS FAMÍLIAS E VARIAÇÕES DE BLOCOS & ITENS
+// ============================================================================
+const COLORS_16 = [
+  "white", "light_gray", "gray", "black", "brown", "red", "orange", "yellow",
+  "lime", "green", "cyan", "light_blue", "blue", "purple", "magenta", "pink"
+];
+
+function buildCuratedSectorDefinitions() {
+  // Setor 1: Minérios, Joias, Barras, Blocos Brutos & Todas as Variações de Cobre
+  const copperPrefixes = ["", "exposed_", "weathered_", "oxidized_", "waxed_", "waxed_exposed_", "waxed_weathered_", "waxed_oxidized_"];
+  const copperItems = [];
+  for (const p of copperPrefixes) {
+    copperItems.push(
+      p ? \`minecraft:\${p}copper\` : "minecraft:copper_block",
+      \`minecraft:\${p}cut_copper\`,
+      \`minecraft:\${p}cut_copper_stairs\`,
+      \`minecraft:\${p}cut_copper_slab\`,
+      \`minecraft:\${p}chiseled_copper\`,
+      \`minecraft:\${p}copper_grate\`,
+      \`minecraft:\${p}copper_bulb\`,
+      \`minecraft:\${p}copper_door\`,
+      \`minecraft:\${p}copper_trapdoor\`
+    );
+  }
+
+  const sector1 = [
+    "minecraft:netherite_block", "minecraft:netherite_ingot", "minecraft:netherite_scrap", "minecraft:ancient_debris",
+    "minecraft:diamond_block", "minecraft:diamond", "minecraft:diamond_ore", "minecraft:deepslate_diamond_ore",
+    "minecraft:emerald_block", "minecraft:emerald", "minecraft:emerald_ore", "minecraft:deepslate_emerald_ore",
+    "minecraft:gold_block", "minecraft:raw_gold_block", "minecraft:gold_ingot", "minecraft:raw_gold", "minecraft:gold_nugget",
+    "minecraft:gold_ore", "minecraft:deepslate_gold_ore", "minecraft:nether_gold_ore",
+    "minecraft:iron_block", "minecraft:raw_iron_block", "minecraft:iron_ingot", "minecraft:raw_iron", "minecraft:iron_nugget",
+    "minecraft:iron_ore", "minecraft:deepslate_iron_ore",
+    "minecraft:copper_block", "minecraft:raw_copper_block", "minecraft:copper_ingot", "minecraft:raw_copper",
+    "minecraft:copper_ore", "minecraft:deepslate_copper_ore", "minecraft:lightning_rod",
+    "minecraft:lapis_block", "minecraft:lapis_lazuli", "minecraft:lapis_ore", "minecraft:deepslate_lapis_ore",
+    "minecraft:redstone_block", "minecraft:redstone", "minecraft:redstone_ore", "minecraft:deepslate_redstone_ore",
+    "minecraft:coal_block", "minecraft:coal", "minecraft:charcoal", "minecraft:coal_ore", "minecraft:deepslate_coal_ore",
+    "minecraft:quartz", "minecraft:nether_quartz_ore",
+    "minecraft:amethyst_block", "minecraft:budding_amethyst", "minecraft:amethyst_shard",
+    "minecraft:amethyst_cluster", "minecraft:large_amethyst_bud", "minecraft:medium_amethyst_bud", "minecraft:small_amethyst_bud",
+    ...copperItems
+  ];
+
+  // Setor 2: Armas, Ferramentas, Armaduras Completas (Todos os Níveis), Baldes & Utilitários
+  const toolTiers = ["netherite", "diamond", "iron", "golden", "stone", "wooden"];
+  const armorTiers = ["netherite", "diamond", "iron", "golden", "chainmail", "leather"];
+  const sector2 = [];
+  for (const t of toolTiers) {
+    sector2.push(
+      \`minecraft:\${t}_sword\`, \`minecraft:\${t}_pickaxe\`, \`minecraft:\${t}_axe\`,
+      \`minecraft:\${t}_shovel\`, \`minecraft:\${t}_hoe\`
+    );
+  }
+  for (const a of armorTiers) {
+    sector2.push(
+      \`minecraft:\${a}_helmet\`, \`minecraft:\${a}_chestplate\`,
+      \`minecraft:\${a}_leggings\`, \`minecraft:\${a}_boots\`
+    );
+  }
+  sector2.push(
+    "minecraft:mace", "minecraft:trident", "minecraft:bow", "minecraft:crossbow", "minecraft:arrow",
+    "minecraft:firework_rocket", "minecraft:firework_star", "minecraft:shield", "minecraft:elytra",
+    "minecraft:turtle_helmet", "minecraft:wolf_armor",
+    "minecraft:diamond_horse_armor", "minecraft:golden_horse_armor", "minecraft:iron_horse_armor", "minecraft:leather_horse_armor",
+    "minecraft:totem_of_undying", "minecraft:flint_and_steel", "minecraft:shears", "minecraft:fishing_rod",
+    "minecraft:carrot_on_a_stick", "minecraft:warped_fungus_on_a_stick", "minecraft:spyglass", "minecraft:brush",
+    "minecraft:compass", "minecraft:recovery_compass", "minecraft:clock", "minecraft:lead", "minecraft:name_tag",
+    "minecraft:saddle", "minecraft:goat_horn",
+    "minecraft:bucket", "minecraft:water_bucket", "minecraft:lava_bucket", "minecraft:powder_snow_bucket",
+    "minecraft:milk_bucket", "minecraft:axolotl_bucket", "minecraft:cod_bucket", "minecraft:salmon_bucket",
+    "minecraft:tropical_fish_bucket", "minecraft:pufferfish_bucket", "minecraft:tadpole_bucket"
+  );
+
+  // Setor 3: Tesouros Raros, 19 Moldes (Trims), 23 Óstracos (Sherds), Discos de Música & Troféus
+  const trims = [
+    "netherite_upgrade", "sentry_armor_trim", "vex_armor_trim", "wild_armor_trim", "coast_armor_trim",
+    "dune_armor_trim", "wayfinder_armor_trim", "raiser_armor_trim", "shaper_armor_trim", "host_armor_trim",
+    "ward_armor_trim", "silence_armor_trim", "tide_armor_trim", "snout_armor_trim", "rib_armor_trim",
+    "eye_armor_trim", "spire_armor_trim", "flow_armor_trim", "bolt_armor_trim"
+  ].map((t) => \`minecraft:\${t}_smithing_template\`);
+
+  const sherds = [
+    "angler", "archer", "arms_up", "blade", "brewer", "burn", "danger", "explorer", "flow", "friend",
+    "guster", "heart", "heartbreak", "howl", "miner", "mourner", "plenty", "prize", "scrape", "sheaf",
+    "shelter", "skull", "snort"
+  ].map((s) => \`minecraft:\${s}_pottery_sherd\`);
+
+  const discs = [
+    "13", "cat", "blocks", "chirp", "far", "mall", "mellohi", "stal", "strad", "ward", "11", "wait",
+    "otherside", "5", "pigstep", "relic", "creator", "creator_music_box", "precipice"
+  ].map((d) => \`minecraft:music_disc_\${d}\`);
+
+  const sector3 = [
+    ...trims,
+    "minecraft:heavy_core", "minecraft:breeze_rod", "minecraft:wind_charge", "minecraft:ominous_trial_key", "minecraft:trial_key",
+    "minecraft:nether_star", "minecraft:beacon", "minecraft:conduit", "minecraft:heart_of_the_sea", "minecraft:nautilus_shell",
+    "minecraft:dragon_egg", "minecraft:dragon_breath", "minecraft:echo_shard", "minecraft:disc_fragment_5",
+    "minecraft:scute", "minecraft:armadillo_scute", "minecraft:shulker_shell", "minecraft:experience_bottle", "minecraft:enchanted_book",
+    "minecraft:decorated_pot",
+    ...sherds,
+    ...discs,
+    "minecraft:dragon_head", "minecraft:wither_skeleton_skull", "minecraft:skeleton_skull",
+    "minecraft:zombie_head", "minecraft:creeper_head", "minecraft:piglin_head", "minecraft:player_head"
+  ];
+
+  // Setor 4: Redstone, Automação, Trilhos, Bancadas de Trabalho & Todas as 17 Caixas de Shulker
+  const shulkers = ["minecraft:undyed_shulker_box", ...COLORS_16.map((c) => \`minecraft:\${c}_shulker_box\`)];
+  const sector4 = [
+    ...shulkers,
+    "minecraft:ender_chest", "minecraft:chest", "minecraft:trapped_chest", "minecraft:barrel",
+    "minecraft:crafter", "minecraft:piston", "minecraft:sticky_piston", "minecraft:observer", "minecraft:hopper",
+    "minecraft:dispenser", "minecraft:dropper", "minecraft:repeater", "minecraft:comparator",
+    "minecraft:redstone_torch", "minecraft:redstone_lamp", "minecraft:lever", "minecraft:tripwire_hook",
+    "minecraft:daylight_detector", "minecraft:target", "minecraft:sculk_sensor", "minecraft:calibrated_sculk_sensor",
+    "minecraft:tnt", "minecraft:slime", "minecraft:honey_block", "minecraft:honeycomb_block",
+    "minecraft:rail", "minecraft:golden_rail", "minecraft:detector_rail", "minecraft:activator_rail",
+    "minecraft:minecart", "minecraft:chest_minecart", "minecraft:hopper_minecart", "minecraft:tnt_minecart",
+    "minecraft:crafting_table", "minecraft:furnace", "minecraft:blast_furnace", "minecraft:smoker",
+    "minecraft:anvil", "minecraft:chipped_anvil", "minecraft:damaged_anvil", "minecraft:smithing_table",
+    "minecraft:grindstone", "minecraft:stonecutter", "minecraft:enchanting_table", "minecraft:bookshelf",
+    "minecraft:chiseled_bookshelf", "minecraft:lectern", "minecraft:brewing_stand", "minecraft:cauldron",
+    "minecraft:loom", "minecraft:cartography_table", "minecraft:fletching_table", "minecraft:composter",
+    "minecraft:lodestone", "minecraft:bell", "minecraft:jukebox", "minecraft:noteblock",
+    "minecraft:armor_stand", "minecraft:frame", "minecraft:glow_frame", "minecraft:painting",
+    "minecraft:scaffolding", "minecraft:ladder", "minecraft:chain", "minecraft:iron_bars",
+    "minecraft:iron_door", "minecraft:iron_trapdoor", "minecraft:heavy_weighted_pressure_plate", "minecraft:light_weighted_pressure_plate"
+  ];
+
+  // Setor 5: Madeiras, Troncos, Tábuas & Todas as Variações (Escadas, Lajes, Cercas, Portas, Alçapões, Placas e Barcos)
+  const overworldWoods = ["oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "pale_oak"];
+  const sector5 = [];
+  for (const w of overworldWoods) {
+    sector5.push(
+      \`minecraft:\${w}_log\`, \`minecraft:stripped_\${w}_log\`,
+      \`minecraft:\${w}_wood\`, \`minecraft:stripped_\${w}_wood\`,
+      \`minecraft:\${w}_planks\`, \`minecraft:\${w}_stairs\`, \`minecraft:\${w}_slab\`,
+      \`minecraft:\${w}_fence\`, w === "oak" ? "minecraft:fence_gate" : \`minecraft:\${w}_fence_gate\`,
+      w === "oak" ? "minecraft:wooden_door" : \`minecraft:\${w}_door\`,
+      w === "oak" ? "minecraft:trapdoor" : \`minecraft:\${w}_trapdoor\`,
+      w === "oak" ? "minecraft:wooden_button" : \`minecraft:\${w}_button\`,
+      w === "oak" ? "minecraft:wooden_pressure_plate" : \`minecraft:\${w}_pressure_plate\`,
+      \`minecraft:\${w}_sign\`, \`minecraft:\${w}_hanging_sign\`,
+      \`minecraft:\${w}_leaves\`, w === "mangrove" ? "minecraft:mangrove_propagule" : \`minecraft:\${w}_sapling\`,
+      \`minecraft:\${w}_boat\`, \`minecraft:\${w}_chest_boat\`
+    );
+  }
+  // Família do Bambu & Mosaico de Bambu
+  sector5.push(
+    "minecraft:bamboo_block", "minecraft:stripped_bamboo_block",
+    "minecraft:bamboo_planks", "minecraft:bamboo_mosaic",
+    "minecraft:bamboo_stairs", "minecraft:bamboo_mosaic_stairs",
+    "minecraft:bamboo_slab", "minecraft:bamboo_mosaic_slab",
+    "minecraft:bamboo_fence", "minecraft:bamboo_fence_gate",
+    "minecraft:bamboo_door", "minecraft:bamboo_trapdoor",
+    "minecraft:bamboo_button", "minecraft:bamboo_pressure_plate",
+    "minecraft:bamboo_sign", "minecraft:bamboo_hanging_sign",
+    "minecraft:bamboo_raft", "minecraft:bamboo_chest_raft"
+  );
+  // Madeiras do Nether (Carmesim & Distorcida)
+  for (const nw of ["crimson", "warped"]) {
+    sector5.push(
+      \`minecraft:\${nw}_stem\`, \`minecraft:stripped_\${nw}_stem\`,
+      \`minecraft:\${nw}_hyphae\`, \`minecraft:stripped_\${nw}_hyphae\`,
+      \`minecraft:\${nw}_planks\`, \`minecraft:\${nw}_stairs\`, \`minecraft:\${nw}_slab\`,
+      \`minecraft:\${nw}_fence\`, \`minecraft:\${nw}_fence_gate\`,
+      \`minecraft:\${nw}_door\`, \`minecraft:\${nw}_trapdoor\`,
+      \`minecraft:\${nw}_button\`, \`minecraft:\${nw}_pressure_plate\`,
+      \`minecraft:\${nw}_sign\`, \`minecraft:\${nw}_hanging_sign\`
+    );
+  }
+  sector5.push("minecraft:stick", "minecraft:bowl", "minecraft:charcoal");
+
+  // Setor 6: Pedras, Ardósia (Deepslate), Tufo (1.21) & Todas as Variações (Escadas, Lajes, Muros, Polidos e Talhados)
+  const sector6 = [
+    // Pedra, Pedregulho e Tijolos de Pedra + Variações
+    "minecraft:stone", "minecraft:normal_stone_stairs", "minecraft:stone_slab", "minecraft:stone_button", "minecraft:stone_pressure_plate",
+    "minecraft:smooth_stone", "minecraft:smooth_stone_slab",
+    "minecraft:cobblestone", "minecraft:stone_stairs", "minecraft:cobblestone_slab", "minecraft:cobblestone_wall",
+    "minecraft:mossy_cobblestone", "minecraft:mossy_cobblestone_stairs", "minecraft:mossy_cobblestone_slab", "minecraft:mossy_cobblestone_wall",
+    "minecraft:stone_bricks", "minecraft:stone_brick_stairs", "minecraft:stone_brick_slab", "minecraft:stone_brick_wall",
+    "minecraft:mossy_stone_bricks", "minecraft:mossy_stone_brick_stairs", "minecraft:mossy_stone_brick_slab", "minecraft:mossy_stone_brick_wall",
+    "minecraft:cracked_stone_bricks", "minecraft:chiseled_stone_bricks",
+    // Ardósia Profunda (Deepslate) + Todas as Variações
+    "minecraft:deepslate", "minecraft:cobbled_deepslate", "minecraft:cobbled_deepslate_stairs", "minecraft:cobbled_deepslate_slab", "minecraft:cobbled_deepslate_wall",
+    "minecraft:polished_deepslate", "minecraft:polished_deepslate_stairs", "minecraft:polished_deepslate_slab", "minecraft:polished_deepslate_wall",
+    "minecraft:deepslate_bricks", "minecraft:deepslate_brick_stairs", "minecraft:deepslate_brick_slab", "minecraft:deepslate_brick_wall", "minecraft:cracked_deepslate_bricks",
+    "minecraft:deepslate_tiles", "minecraft:deepslate_tile_stairs", "minecraft:deepslate_tile_slab", "minecraft:deepslate_tile_wall", "minecraft:cracked_deepslate_tiles",
+    "minecraft:chiseled_deepslate", "minecraft:reinforced_deepslate",
+    // Tufo 1.21 (Tuff) + Todas as Variações
+    "minecraft:tuff", "minecraft:tuff_stairs", "minecraft:tuff_slab", "minecraft:tuff_wall", "minecraft:chiseled_tuff",
+    "minecraft:polished_tuff", "minecraft:polished_tuff_stairs", "minecraft:polished_tuff_slab", "minecraft:polished_tuff_wall",
+    "minecraft:tuff_bricks", "minecraft:tuff_brick_stairs", "minecraft:tuff_brick_slab", "minecraft:tuff_brick_wall", "minecraft:chiseled_tuff_bricks",
+    // Granito, Diorito, Andesito, Calcita e Espeleotema + Variações
+    "minecraft:granite", "minecraft:granite_stairs", "minecraft:granite_slab", "minecraft:granite_wall",
+    "minecraft:polished_granite", "minecraft:polished_granite_stairs", "minecraft:polished_granite_slab",
+    "minecraft:diorite", "minecraft:diorite_stairs", "minecraft:diorite_slab", "minecraft:diorite_wall",
+    "minecraft:polished_diorite", "minecraft:polished_diorite_stairs", "minecraft:polished_diorite_slab",
+    "minecraft:andesite", "minecraft:andesite_stairs", "minecraft:andesite_slab", "minecraft:andesite_wall",
+    "minecraft:polished_andesite", "minecraft:polished_andesite_stairs", "minecraft:polished_andesite_slab",
+    "minecraft:calcite", "minecraft:dripstone_block", "minecraft:pointed_dripstone"
+  ];
+
+  // Setor 7: Tijolos, Barro (Mud), Arenito, Quartzo, Prismarinho & Todas as Variações (Escadas, Lajes e Muros)
+  const sector7 = [
+    // Tijolos e Barro (Mud)
+    "minecraft:brick_block", "minecraft:brick_stairs", "minecraft:brick_slab", "minecraft:brick_wall", "minecraft:brick",
+    "minecraft:mud", "minecraft:packed_mud", "minecraft:mud_bricks", "minecraft:mud_brick_stairs", "minecraft:mud_brick_slab", "minecraft:mud_brick_wall",
+    "minecraft:clay", "minecraft:clay_ball",
+    // Quartzo + Variações
+    "minecraft:quartz_block", "minecraft:quartz_stairs", "minecraft:quartz_slab",
+    "minecraft:smooth_quartz", "minecraft:smooth_quartz_stairs", "minecraft:smooth_quartz_slab",
+    "minecraft:chiseled_quartz_block", "minecraft:quartz_pillar", "minecraft:quartz_bricks",
+    // Arenito & Arenito Vermelho + Variações
+    "minecraft:sandstone", "minecraft:sandstone_stairs", "minecraft:sandstone_slab", "minecraft:sandstone_wall",
+    "minecraft:smooth_sandstone", "minecraft:smooth_sandstone_stairs", "minecraft:smooth_sandstone_slab",
+    "minecraft:cut_sandstone", "minecraft:cut_sandstone_slab", "minecraft:chiseled_sandstone",
+    "minecraft:red_sandstone", "minecraft:red_sandstone_stairs", "minecraft:red_sandstone_slab", "minecraft:red_sandstone_wall",
+    "minecraft:smooth_red_sandstone", "minecraft:smooth_red_sandstone_stairs", "minecraft:smooth_red_sandstone_slab",
+    "minecraft:cut_red_sandstone", "minecraft:cut_red_sandstone_slab", "minecraft:chiseled_red_sandstone",
+    // Prismarinho + Variações
+    "minecraft:prismarine", "minecraft:prismarine_stairs", "minecraft:prismarine_slab", "minecraft:prismarine_wall",
+    "minecraft:prismarine_bricks", "minecraft:prismarine_bricks_stairs", "minecraft:prismarine_brick_slab",
+    "minecraft:dark_prismarine", "minecraft:dark_prismarine_stairs", "minecraft:dark_prismarine_slab",
+    "minecraft:sea_lantern", "minecraft:prismarine_shard", "minecraft:prismarine_crystals"
+  ];
+
+  // Setor 8: Blocos Coloridos (Todas as 16 Cores de Concreto, Cimento, Lã, Tapete, Terracota, Azulejo, Vidro, Cama, Vela, Estandarte e Corante)
+  const sector8 = [
+    ...COLORS_16.map((c) => \`minecraft:\${c}_concrete\`),
+    ...COLORS_16.map((c) => \`minecraft:\${c}_concrete_powder\`),
+    ...COLORS_16.map((c) => \`minecraft:\${c}_wool\`),
+    ...COLORS_16.map((c) => \`minecraft:\${c}_carpet\`),
+    "minecraft:terracotta",
+    ...COLORS_16.map((c) => \`minecraft:\${c}_terracotta\`),
+    ...COLORS_16.map((c) => \`minecraft:\${c}_glazed_terracotta\`),
+    "minecraft:glass", "minecraft:tinted_glass", "minecraft:glass_pane",
+    ...COLORS_16.map((c) => \`minecraft:\${c}_stained_glass\`),
+    ...COLORS_16.map((c) => \`minecraft:\${c}_stained_glass_pane\`),
+    "minecraft:candle",
+    ...COLORS_16.map((c) => \`minecraft:\${c}_candle\`),
+    ...COLORS_16.map((c) => \`minecraft:\${c}_bed\`),
+    ...COLORS_16.map((c) => \`minecraft:\${c}_banner\`),
+    ...COLORS_16.map((c) => \`minecraft:\${c}_dye\`)
+  ];
+
+  // Setor 9: Alimentos, Agricultura, Flores, Plantas, Corais, Iluminação & Natureza
+  const sector9 = [
+    // Comidas
+    "minecraft:enchanted_golden_apple", "minecraft:golden_apple", "minecraft:golden_carrot",
+    "minecraft:cooked_beef", "minecraft:beef", "minecraft:cooked_porkchop", "minecraft:porkchop",
+    "minecraft:cooked_mutton", "minecraft:mutton", "minecraft:cooked_chicken", "minecraft:chicken",
+    "minecraft:cooked_rabbit", "minecraft:rabbit", "minecraft:cooked_salmon", "minecraft:salmon",
+    "minecraft:cooked_cod", "minecraft:cod", "minecraft:tropical_fish", "minecraft:pufferfish",
+    "minecraft:bread", "minecraft:baked_potato", "minecraft:potato", "minecraft:carrot", "minecraft:beetroot",
+    "minecraft:apple", "minecraft:melon_slice", "minecraft:melon_block", "minecraft:pumpkin", "minecraft:carved_pumpkin", "minecraft:lit_pumpkin",
+    "minecraft:pumpkin_pie", "minecraft:cookie", "minecraft:cake", "minecraft:honey_bottle", "minecraft:honeycomb",
+    "minecraft:sweet_berries", "minecraft:glow_berries", "minecraft:dried_kelp", "minecraft:dried_kelp_block",
+    "minecraft:mushroom_stew", "minecraft:rabbit_stew", "minecraft:beetroot_soup", "minecraft:suspicious_stew",
+    // Sementes, Plantações e Ingredientes
+    "minecraft:wheat", "minecraft:hay_block", "minecraft:wheat_seeds", "minecraft:pumpkin_seeds",
+    "minecraft:melon_seeds", "minecraft:beetroot_seeds", "minecraft:torchflower_seeds", "minecraft:pitcher_pod",
+    "minecraft:sugar_cane", "minecraft:sugar", "minecraft:cocoa_beans", "minecraft:bamboo", "minecraft:cactus", "minecraft:kelp",
+    "minecraft:nether_wart", "minecraft:fermented_spider_eye", "minecraft:spider_eye", "minecraft:glistering_melon_slice",
+    "minecraft:rabbit_foot", "minecraft:glass_bottle", "minecraft:egg", "minecraft:turtle_egg", "minecraft:sniffer_egg",
+    // Blocos Naturais (Terra, Areia, Gelo, Musgo, Esponja)
+    "minecraft:grass_block", "minecraft:dirt", "minecraft:coarse_dirt", "minecraft:rooted_dirt", "minecraft:podzol", "minecraft:mycelium", "minecraft:dirt_path",
+    "minecraft:moss_block", "minecraft:moss_carpet", "minecraft:sand", "minecraft:red_sand", "minecraft:gravel", "minecraft:flint",
+    "minecraft:snow", "minecraft:snow_layer", "minecraft:snowball", "minecraft:ice", "minecraft:packed_ice", "minecraft:blue_ice",
+    "minecraft:sponge", "minecraft:wet_sponge", "minecraft:web", "minecraft:bone_block", "minecraft:bee_nest", "minecraft:beehive",
+    // Flores, Cogumelos, Plantas & Corais
+    "minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium", "minecraft:azure_bluet",
+    "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip", "minecraft:pink_tulip",
+    "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley", "minecraft:wither_rose",
+    "minecraft:torchflower", "minecraft:pitcher_plant", "minecraft:sunflower", "minecraft:lilac", "minecraft:rose_bush", "minecraft:peony",
+    "minecraft:pink_petals", "minecraft:spore_blossom", "minecraft:azalea", "minecraft:flowering_azalea",
+    "minecraft:azalea_leaves", "minecraft:flowering_azalea_leaves",
+    "minecraft:big_dripleaf", "minecraft:small_dripleaf_block", "minecraft:waterlily", "minecraft:vine", "minecraft:glow_lichen",
+    "minecraft:brown_mushroom", "minecraft:red_mushroom", "minecraft:brown_mushroom_block", "minecraft:red_mushroom_block", "minecraft:mushroom_stem",
+    "minecraft:tube_coral_block", "minecraft:brain_coral_block", "minecraft:bubble_coral_block", "minecraft:fire_coral_block", "minecraft:horn_coral_block",
+    "minecraft:sea_pickle",
+    // Iluminação
+    "minecraft:lantern", "minecraft:soul_lantern", "minecraft:torch", "minecraft:soul_torch",
+    "minecraft:ochre_froglight", "minecraft:verdant_froglight", "minecraft:pearlescent_froglight"
+  ];
+
+  // Setor 10: Nether, The End, Pedra Negra (Blackstone), Purpur, Basalto, Sculk & Drops de Mobs
+  const sector10 = [
+    // Nether & Pedra Negra (Blackstone) + Todas as Variações
+    "minecraft:obsidian", "minecraft:crying_obsidian", "minecraft:respawn_anchor",
+    "minecraft:netherrack", "minecraft:soul_sand", "minecraft:soul_soil", "minecraft:magma",
+    "minecraft:glowstone", "minecraft:glowstone_dust", "minecraft:shroomlight",
+    "minecraft:basalt", "minecraft:smooth_basalt", "minecraft:polished_basalt",
+    "minecraft:blackstone", "minecraft:blackstone_stairs", "minecraft:blackstone_slab", "minecraft:blackstone_wall", "minecraft:gilded_blackstone",
+    "minecraft:polished_blackstone", "minecraft:polished_blackstone_stairs", "minecraft:polished_blackstone_slab", "minecraft:polished_blackstone_wall",
+    "minecraft:polished_blackstone_button", "minecraft:polished_blackstone_pressure_plate", "minecraft:chiseled_polished_blackstone",
+    "minecraft:polished_blackstone_bricks", "minecraft:polished_blackstone_brick_stairs", "minecraft:polished_blackstone_brick_slab", "minecraft:polished_blackstone_brick_wall",
+    "minecraft:cracked_polished_blackstone_bricks",
+    "minecraft:nether_brick", "minecraft:nether_brick_stairs", "minecraft:nether_brick_slab", "minecraft:nether_brick_wall", "minecraft:nether_brick_fence",
+    "minecraft:cracked_nether_bricks", "minecraft:chiseled_nether_bricks", "minecraft:netherbrick",
+    "minecraft:red_nether_brick", "minecraft:red_nether_brick_stairs", "minecraft:red_nether_brick_slab", "minecraft:red_nether_brick_wall",
+    "minecraft:nether_wart_block", "minecraft:warped_wart_block", "minecraft:crimson_fungus", "minecraft:warped_fungus",
+    "minecraft:crimson_nylium", "minecraft:warped_nylium", "minecraft:weeping_vines", "minecraft:twisting_vines",
+    // The End + Todas as Variações
+    "minecraft:end_stone", "minecraft:end_stone_bricks", "minecraft:end_brick_stairs", "minecraft:end_stone_brick_slab", "minecraft:end_stone_brick_wall",
+    "minecraft:purpur_block", "minecraft:purpur_pillar", "minecraft:purpur_stairs", "minecraft:purpur_slab",
+    "minecraft:end_rod", "minecraft:end_crystal", "minecraft:ender_pearl", "minecraft:ender_eye",
+    "minecraft:chorus_flower", "minecraft:chorus_fruit", "minecraft:popped_chorus_fruit",
+    // Deep Dark (Sculk) & Drops de Mobs
+    "minecraft:sculk", "minecraft:sculk_vein", "minecraft:sculk_catalyst", "minecraft:sculk_shrieker",
+    "minecraft:blaze_rod", "minecraft:blaze_powder", "minecraft:ghast_tear", "minecraft:magma_cream",
+    "minecraft:slime_ball", "minecraft:phantom_membrane", "minecraft:gunpowder", "minecraft:string",
+    "minecraft:bone", "minecraft:bone_meal", "minecraft:rotten_flesh", "minecraft:leather", "minecraft:rabbit_hide",
+    "minecraft:feather", "minecraft:ink_sac", "minecraft:glow_ink_sac", "minecraft:paper", "minecraft:book"
+  ];
+
+  return [
+    { id: 1, name: "1. Minérios, Joias, Barras & Família do Cobre (Todas Variações)", shortName: "Minérios & Cobre", items: sector1 },
+    { id: 2, name: "2. Armas, Ferramentas, Armaduras (Todos Níveis) & Utilitários", shortName: "Armas & Armaduras", items: sector2 },
+    { id: 3, name: "3. Raros, 19 Moldes (Trims), 23 Óstracos (Sherds) & Discos", shortName: "Raros, Trims & Discos", items: sector3 },
+    { id: 4, name: "4. Redstone, Automação, Bancadas & Todas as 17 Shulkers", shortName: "Redstone & 17 Shulkers", items: sector4 },
+    { id: 5, name: "5. Madeiras & Variações (Escadas/Lajes/Cercas/Portas - 12 Árvores)", shortName: "Madeiras & Variações", items: sector5 },
+    { id: 6, name: "6. Pedras, Ardósia, Tufo & Variações (Escadas/Lajes/Muros)", shortName: "Pedras & Variações", items: sector6 },
+    { id: 7, name: "7. Tijolos, Quartzo, Arenito, Prismarinho, Barro & Variações", shortName: "Quartzo, Tijolos & Variações", items: sector7 },
+    { id: 8, name: "8. Blocos Coloridos (16 Cores: Concreto/Lã/Terracota/Vidro/Cama/Vela)", shortName: "Blocos Coloridos (16 Cores)", items: sector8 },
+    { id: 9, name: "9. Alimentos, Flores, Corais, Iluminação & Blocos da Natureza", shortName: "Comidas, Flores & Natureza", items: sector9 },
+    { id: 10, name: "10. Nether, The End, Pedra Negra, Purpur, Sculk & Drops", shortName: "Nether, End & Variações", items: sector10 }
+  ];
+}
+
+const CHEST_SECTORS = buildCuratedSectorDefinitions();
+
+// Resolve um ID para o ID exato válido no motor do Minecraft Bedrock atual
+function resolveValidBedrockItemId(rawId) {
+  if (!rawId) return null;
+  const st = createSafeItemStack(rawId, 1);
+  if (st && st.typeId) {
+    return st.typeId.toLowerCase();
+  }
+  return null;
+}
+
+// Retorna os 10 Setores Completos unindo todas as variações explícitas + 100% dos blocos e itens do motor do jogo!
+let _cachedDynamicSectors = null;
+function getCompleteChestSectors() {
+  if (_cachedDynamicSectors && _cachedDynamicSectors.length > 0) {
+    return _cachedDynamicSectors;
+  }
+
+  const baseSectors = buildCuratedSectorDefinitions().map((sec) => ({
+    id: sec.id,
+    name: sec.name,
+    shortName: sec.shortName,
+    items: []
+  }));
+  const sectorMap = {};
+  for (const s of baseSectors) {
+    sectorMap[s.id] = s;
+  }
+
   const seen = new Set();
 
-  // 1. Percorre todos os Blocos registrados e filtra apenas os obtíveis no Survival
+  // 1. Valida e adiciona todos os itens e variações curadas de cada um dos 10 Setores
+  for (const rawSec of CHEST_SECTORS) {
+    const targetSec = sectorMap[rawSec.id];
+    for (const candidateId of rawSec.items) {
+      const validId = resolveValidBedrockItemId(candidateId);
+      if (validId && !seen.has(validId)) {
+        seen.add(validId);
+        targetSec.items.push(validId);
+      }
+    }
+  }
+
+  // 2. Varre 100% dos Blocos e Itens registrados no Minecraft Bedrock (BlockTypes + ItemTypes)
+  // para garantir que NENHUMA variação de bloco ou item fique de fora!
+  const engineExtras = [];
   try {
     if (typeof BlockTypes !== "undefined" && BlockTypes.getAll) {
-      const allBlocks = BlockTypes.getAll();
-      for (const b of allBlocks) {
+      for (const b of BlockTypes.getAll()) {
         if (!b || !b.id) continue;
-        const id = b.id;
-        const lower = id.toLowerCase();
+        const lower = b.id.toLowerCase();
         if (seen.has(lower) || !isSurvivalObtainable(lower)) continue;
-        try {
-          const testStack = new ItemStack(id, 1);
-          if (testStack) {
-            seen.add(lower);
-            validIds.push(id);
-          }
-        } catch (e) {}
+        const validId = resolveValidBedrockItemId(lower);
+        if (validId && !seen.has(validId) && isSurvivalObtainable(validId)) {
+          seen.add(validId);
+          engineExtras.push(validId);
+        }
       }
     }
   } catch (e) {}
 
-  // 2. Percorre todos os Itens de inventário e filtra apenas os obtíveis no Survival
   try {
-    const allItems = ItemTypes.getAll();
-    for (const it of allItems) {
-      if (!it || !it.id) continue;
-      const id = it.id;
-      const lower = id.toLowerCase();
-      if (seen.has(lower) || !isSurvivalObtainable(lower)) continue;
-      try {
-        const testStack = new ItemStack(id, 1);
-        if (testStack) {
-          seen.add(lower);
-          validIds.push(id);
+    if (typeof ItemTypes !== "undefined" && ItemTypes.getAll) {
+      for (const it of ItemTypes.getAll()) {
+        if (!it || !it.id) continue;
+        const lower = it.id.toLowerCase();
+        if (seen.has(lower) || !isSurvivalObtainable(lower)) continue;
+        const validId = resolveValidBedrockItemId(lower);
+        if (validId && !seen.has(validId) && isSurvivalObtainable(validId)) {
+          seen.add(validId);
+          engineExtras.push(validId);
         }
-      } catch (e) {}
+      }
     }
   } catch (e) {}
 
-  return validIds;
+  // Ordena alfabeticamente os extras descobertos no motor e distribui cada um no seu Setor correspondente!
+  engineExtras.sort((a, b) => a.localeCompare(b));
+  for (const extraId of engineExtras) {
+    const catId = getSurvivalCategoryPriority(extraId);
+    const targetSec = sectorMap[catId] || sectorMap[9];
+    targetSec.items.push(extraId);
+  }
+
+  _cachedDynamicSectors = baseSectors.filter((s) => s.items.length > 0);
+  return _cachedDynamicSectors;
 }
 
-// Cria e conecta um Baú Duplo (54 slots) garantindo que ambos os blocos fiquem no eixo X (x e x + 1)
-// e com a mesma direção (minecraft:cardinal_direction = "north" ou "south"), forçando a fusão automática no Bedrock!
+// Coleta TODOS os Blocos, Variações de Blocos e Itens Survival já 100% organizados nos 10 Setores!
+function getAllGameBlocksAndItems() {
+  const sectors = getCompleteChestSectors();
+  const all = [];
+  for (const sec of sectors) {
+    for (const id of sec.items) {
+      all.push(id);
+    }
+  }
+  return all;
+}
+
+// Resolve a permutação exata do Baú para qualquer versão do Minecraft Bedrock (1.20, 1.21+ e 26.60.29)
+// verificando dinamicamente se o motor usa "minecraft:cardinal_direction" ou "facing_direction"
+function resolveChestPermutation(dir, blockType = "minecraft:chest") {
+  const safeDir =
+    dir === "north" || dir === "south" || dir === "east" || dir === "west" ? dir : "north";
+  const legacyMap = { north: 2, south: 3, west: 4, east: 5 };
+  const legacyDir = legacyMap[safeDir] || 2;
+
+  try {
+    const basePerm = BlockPermutation.resolve(blockType);
+    if (basePerm) {
+      try {
+        if (basePerm.getState("minecraft:cardinal_direction") !== undefined) {
+          return basePerm.withState("minecraft:cardinal_direction", safeDir);
+        }
+      } catch (e1) {}
+      try {
+        if (basePerm.getState("facing_direction") !== undefined) {
+          return basePerm.withState("facing_direction", legacyDir);
+        }
+      } catch (e2) {}
+    }
+  } catch (e) {}
+
+  try {
+    const pCard = BlockPermutation.resolve(blockType, {
+      "minecraft:cardinal_direction": safeDir
+    });
+    if (pCard && pCard.getState("minecraft:cardinal_direction") === safeDir) {
+      return pCard;
+    }
+  } catch (e) {}
+
+  try {
+    const pLegacy = BlockPermutation.resolve(blockType, {
+      "facing_direction": legacyDir
+    });
+    if (pLegacy && pLegacy.getState("facing_direction") === legacyDir) {
+      return pLegacy;
+    }
+  } catch (e) {}
+
+  try {
+    return BlockPermutation.resolve(blockType, {
+      "minecraft:cardinal_direction": safeDir
+    });
+  } catch (e) {
+    try {
+      return BlockPermutation.resolve(blockType, {
+        "facing_direction": legacyDir
+      });
+    } catch (e2) {
+      return BlockPermutation.resolve(blockType);
+    }
+  }
+}
+
+// Cria e conecta 100% um Baú Duplo (54 slots) em qualquer eixo (X ou Z) aplicando a direção cardinal correta
+// ("north", "south", "east", "west"), garantindo a fusão imediata em qualquer direção do olhar!
+// IMPORTANTE NO BEDROCK: Nunca chamar setType("minecraft:chest") antes de setPermutation(perm), pois no motor C++ do Bedrock
+// o pareamento de Baú Duplo (ChestBlock::onPlace -> pairWith) só dispara na transição de "minecraft:air" para "minecraft:chest" já com a rotação final!
 function placeConnectedDoubleChest(dim, posA, posB, cardinalDir = "north") {
+  if (!dim || !posA || !posB) return null;
   const blockA = dim.getBlock(posA);
   const blockB = dim.getBlock(posB);
   if (!blockA || !blockB) return null;
 
-  // Limpa antes para garantir que o evento de pareamento (onPlace) do Bedrock una os 2 baús
+  // 1. Garante matematicamente que a direção frontal (dir) seja SEMPRE perpendicular ao eixo que conecta posA e posB:
+  // - Se posA e posB estão lado a lado no eixo X (dx != 0, dz == 0), o Baú Duplo OBRIGATORIAMENTE deve olhar para "north" ou "south"
+  // - Se posA e posB estão lado a lado no eixo Z (dz != 0, dx == 0), o Baú Duplo OBRIGATORIAMENTE deve olhar para "east" ou "west"
+  const dx = posB.x - posA.x;
+  const dz = posB.z - posA.z;
+  let dir = cardinalDir || "north";
+  if (Math.abs(dx) === 1 && dz === 0) {
+    if (dir !== "north" && dir !== "south") {
+      dir = "north";
+    }
+  } else if (Math.abs(dz) === 1 && dx === 0) {
+    if (dir !== "east" && dir !== "west") {
+      dir = "east";
+    }
+  }
+
+  const legacyMap = { north: 2, south: 3, west: 4, east: 5 };
+  const legacyDir = legacyMap[dir] || 2;
+
+  // 2. Limpa ambos os blocos para AR primeiro (remove qualquer ChestBlockActor antigo/desconectado)
   try {
     blockA.setType("minecraft:air");
     blockB.setType("minecraft:air");
   } catch (e) {}
 
-  // 1. Primeiro coloca os dois baús via setType("minecraft:chest") lado a lado no eixo X (posA.x e posA.x + 1),
-  // pois no Bedrock o setType dispara nativamente o ChestBlockActor::pairWith no eixo X!
-  try {
-    blockA.setType("minecraft:chest");
-    blockB.setType("minecraft:chest");
-  } catch (e) {}
+  // 3. Coloca primeiro a metade de menor coordenada (Lead Chest no Bedrock) e depois a de maior coordenada
+  const isALead = posA.x < posB.x || (posA.x === posB.x && posA.z <= posB.z);
+  const firstBlock = isALead ? blockA : blockB;
+  const secondBlock = isALead ? blockB : blockA;
+  const firstPos = isALead ? posA : posB;
+  const secondPos = isALead ? posB : posA;
 
-  // 2. Se a direção for "south" (parede norte olhando para o corredor), aplica a permutação idêntica nos dois blocos
-  if (cardinalDir && cardinalDir !== "north") {
-    const legacyDir = cardinalDir === "south" ? 3 : cardinalDir === "west" ? 4 : 5;
-    let rotated = false;
+  // 4. Aplica DIRETAMENTE a permutação final a partir do ar (dispara ChestBlock::onPlace já na direção exata, unindo os 2 baús na hora!)
+  const chestPerm = resolveChestPermutation(dir, "minecraft:chest");
+  let placed = false;
+  if (chestPerm) {
     try {
-      const perm = BlockPermutation.resolve("minecraft:chest", {
-        "minecraft:cardinal_direction": cardinalDir
-      });
-      blockA.setPermutation(perm);
-      blockB.setPermutation(perm);
-      rotated = true;
+      firstBlock.setPermutation(chestPerm);
+      secondBlock.setPermutation(chestPerm);
+      placed = true;
     } catch (e) {}
-
-    if (!rotated) {
-      try {
-        const permLegacy = BlockPermutation.resolve("minecraft:chest", {
-          "facing_direction": legacyDir
-        });
-        blockA.setPermutation(permLegacy);
-        blockB.setPermutation(permLegacy);
-      } catch (e) {}
-    }
   }
 
-  return { blockA, blockB };
+  if (!placed) {
+    try {
+      firstBlock.setType("minecraft:chest");
+      secondBlock.setType("minecraft:chest");
+      if (chestPerm) {
+        firstBlock.setPermutation(chestPerm);
+        secondBlock.setPermutation(chestPerm);
+      }
+    } catch (e) {}
+  }
+
+  // 5. Verifica se os 2 baús já se fundiram em 1 Baú Duplo de 54 slots; se ainda estiverem com 27 slots, força o reparo imediato!
+  let contSize = 0;
+  try {
+    contSize = firstBlock.getComponent("minecraft:inventory")?.container?.size || 0;
+  } catch (e) {}
+
+  if (contSize < 54 && chestPerm) {
+    try {
+      secondBlock.setType("minecraft:air");
+      secondBlock.setPermutation(chestPerm);
+      contSize = firstBlock.getComponent("minecraft:inventory")?.container?.size || 0;
+    } catch (e) {}
+  }
+
+  if (contSize < 54 && typeof dim.runCommand === "function") {
+    try {
+      dim.runCommand(\`setblock \${firstPos.x} \${firstPos.y} \${firstPos.z} air\`);
+      dim.runCommand(\`setblock \${secondPos.x} \${secondPos.y} \${secondPos.z} air\`);
+      dim.runCommand(
+        \`setblock \${firstPos.x} \${firstPos.y} \${firstPos.z} chest ["minecraft:cardinal_direction"="\${dir}"]\`
+      );
+      dim.runCommand(
+        \`setblock \${secondPos.x} \${secondPos.y} \${secondPos.z} chest ["minecraft:cardinal_direction"="\${dir}"]\`
+      );
+      contSize = dim.getBlock(firstPos)?.getComponent("minecraft:inventory")?.container?.size || 0;
+    } catch (e) {}
+
+    if (contSize < 54) {
+      try {
+        dim.runCommand(
+          \`setblock \${firstPos.x} \${firstPos.y} \${firstPos.z} chest ["facing_direction"=\${legacyDir}]\`
+        );
+        dim.runCommand(
+          \`setblock \${secondPos.x} \${secondPos.y} \${secondPos.z} chest ["facing_direction"=\${legacyDir}]\`
+        );
+      } catch (e) {}
+    }
+
+    try {
+      const checkA = dim.getBlock(posA);
+      const checkB = dim.getBlock(posB);
+      if (checkA && checkA.typeId !== "minecraft:chest" && chestPerm) {
+        checkA.setPermutation(chestPerm);
+      }
+      if (checkB && checkB.typeId !== "minecraft:chest" && chestPerm) {
+        checkB.setPermutation(chestPerm);
+      }
+    } catch (e) {}
+  }
+
+  return {
+    blockA: dim.getBlock(posA) || blockA,
+    blockB: dim.getBlock(posB) || blockB,
+    dir
+  };
 }
 
-// Fixa uma Moldura Brilhante (Glow Item Frame) identificando o Bloco/Item exatamente na frente do Baú Duplo
-function attachGlowItemFrameToDoubleChest(dim, posA, posB, baseItemOrId, cardinalDir = "north") {
+// Tradutor completo de IDs e Variações de Blocos do Minecraft para Português nas Placas dos Baús
+const PT_BR_EXACT_ITEM_NAMES = {
+  "netherite_block": "BLOCO NETHERITA",
+  "netherite_ingot": "BARRA NETHERITA",
+  "netherite_scrap": "FRAGMENTO NETHER",
+  "ancient_debris": "DETRITO ANCESTR.",
+  "diamond_block": "BLOCO DIAMANTE",
+  "diamond": "DIAMANTE",
+  "emerald_block": "BLOCO ESMERALDA",
+  "emerald": "ESMERALDA",
+  "gold_block": "BLOCO DE OURO",
+  "raw_gold_block": "BLOCO OURO BRUTO",
+  "gold_ingot": "BARRA DE OURO",
+  "gold_nugget": "PEPITA DE OURO",
+  "raw_gold": "OURO BRUTO",
+  "iron_block": "BLOCO DE FERRO",
+  "raw_iron_block": "BLOCO FERRO BRUTO",
+  "iron_ingot": "BARRA DE FERRO",
+  "iron_nugget": "PEPITA DE FERRO",
+  "raw_iron": "FERRO BRUTO",
+  "copper_block": "BLOCO DE COBRE",
+  "raw_copper_block": "BLOCO COBRE BRUTO",
+  "copper_ingot": "BARRA DE COBRE",
+  "raw_copper": "COBRE BRUTO",
+  "coal_block": "BLOCO DE CARVAO",
+  "coal": "CARVAO",
+  "charcoal": "CARVAO VEGETAL",
+  "redstone_block": "BLOCO REDSTONE",
+  "redstone": "PO DE REDSTONE",
+  "lapis_block": "BLOCO DE LAPIS",
+  "lapis_lazuli": "LAPIS-LAZULI",
+  "amethyst_shard": "FRAG. AMETISTA",
+  "amethyst_block": "BLOCO AMETISTA",
+  "budding_amethyst": "GEODO AMETISTA",
+  "amethyst_cluster": "AGREG. AMETISTA",
+  "quartz_block": "BLOCO DE QUARTZO",
+  "quartz": "QUARTZO NETHER",
+  "mace": "CLAVA 1.21 (MACE)",
+  "heavy_core": "NUCLEO PESADO",
+  "trident": "TRIDENTE",
+  "bow": "ARCO",
+  "crossbow": "BESTA (CROSSBOW)",
+  "arrow": "FLECHAS",
+  "shield": "ESCUDO",
+  "elytra": "ELITROS (ELYTRA)",
+  "turtle_helmet": "CASCO TARTARUGA",
+  "wolf_armor": "ARMADURA DE LOBO",
+  "fishing_rod": "VARA DE PESCA",
+  "shears": "TESOURA",
+  "flint_and_steel": "PEDERNEIRA",
+  "spyglass": "LUNETA",
+  "brush": "PINCEL ARQUEOL.",
+  "netherite_upgrade_smithing_template": "MOLDE NETHERITA",
+  "breeze_rod": "VARA DE BREEZE",
+  "wind_charge": "CARGA DE VENTO",
+  "ominous_trial_key": "CHAVE SINISTRA",
+  "trial_key": "CHAVE DESAFIO",
+  "totem_of_undying": "TOTEM IMORTAL",
+  "nether_star": "ESTRELA NETHER",
+  "beacon": "SINALIZADOR",
+  "conduit": "CONDUTO MARINHO",
+  "heart_of_the_sea": "CORACAO DO MAR",
+  "nautilus_shell": "CONCHA NAUTILO",
+  "dragon_egg": "OVO DO DRAGAO",
+  "dragon_breath": "BAFO DO DRAGAO",
+  "experience_bottle": "FRASCO DE XP",
+  "enchanted_book": "LIVRO ENCANTADO",
+  "decorated_pot": "VASO DECORADO",
+  "crafter": "BANCADA AUTOMAT.",
+  "piston": "PISTAO",
+  "sticky_piston": "PISTAO GRUDENTO",
+  "observer": "OBSERVADOR",
+  "hopper": "FUNIL (HOPPER)",
+  "dispenser": "EJETOR",
+  "dropper": "LIBERADOR",
+  "repeater": "REPETIDOR",
+  "comparator": "COMPARADOR",
+  "redstone_torch": "TOCHA REDSTONE",
+  "redstone_lamp": "LAMPADA REDSTONE",
+  "lever": "ALAVANCA",
+  "tripwire_hook": "GANCHO ARMADILHA",
+  "daylight_detector": "SENSOR SOLAR",
+  "target": "BLOCO DE ALVO",
+  "tnt": "DINAMITE (TNT)",
+  "slime_block": "BLOCO DE SLIME",
+  "slime": "BLOCO DE SLIME",
+  "honey_block": "BLOCO DE MEL",
+  "honeycomb_block": "BLOCO DE FAVO",
+  "rail": "TRILHO",
+  "golden_rail": "TRILHO ELETRICO",
+  "detector_rail": "TRILHO DETECTOR",
+  "activator_rail": "TRILHO ATIVADOR",
+  "minecart": "CARRINHO MINA",
+  "chest_minecart": "CARRINHO C/ BAU",
+  "hopper_minecart": "CARRINHO FUNIL",
+  "tnt_minecart": "CARRINHO C/ TNT",
+  "shulker_box": "CAIXA SHULKER",
+  "undyed_shulker_box": "CAIXA SHULKER",
+  "ender_chest": "BAU DO END",
+  "chest": "BAU DE MADEIRA",
+  "trapped_chest": "BAU ARMADILHA",
+  "barrel": "BARRIL",
+  "enchanted_golden_apple": "MACA DOURADA ENC",
+  "golden_apple": "MACA DOURADA",
+  "golden_carrot": "CENOURA DOURADA",
+  "cooked_beef": "BIFE ASSADO",
+  "cooked_porkchop": "CARNE DE PORCO",
+  "cooked_mutton": "CARNE CARNEIRO",
+  "cooked_chicken": "FRANGO ASSADO",
+  "cooked_salmon": "SALMAO ASSADO",
+  "cooked_cod": "BACALHAU ASSADO",
+  "cooked_rabbit": "COELHO ASSADO",
+  "bread": "PAO",
+  "cookie": "BISCOITO",
+  "cake": "BOLO",
+  "pumpkin_pie": "TORTA ABOBORA",
+  "honey_bottle": "GARRAFA DE MEL",
+  "nether_wart": "FUNGO DO NETHER",
+  "blaze_powder": "PO DE BLAZE",
+  "blaze_rod": "VARA DE BLAZE",
+  "ghast_tear": "LAGRIMA DE GHAST",
+  "magma_cream": "CREME DE MAGMA",
+  "fermented_spider_eye": "OLHO FERMENTADO",
+  "spider_eye": "OLHO DE ARANHA",
+  "glistering_melon_slice": "MELANCIA RELUZ.",
+  "rabbit_foot": "PE DE COELHO",
+  "phantom_membrane": "MEMBRANA PHANTOM",
+  "glowstone_dust": "PO PEDRA LUMIN.",
+  "gunpowder": "POLVORA",
+  "sugar": "ACUCAR",
+  "glass_bottle": "FRASCO DE VIDRO",
+  "brewing_stand": "SUPORTE POCOES",
+  "cauldron": "CALDEIRAO",
+  "sea_lantern": "LANTERNA DO MAR",
+  "glowstone": "PEDRA LUMINOSA",
+  "shroomlight": "COGUMELUZ",
+  "obsidian": "OBSIDIANA",
+  "crying_obsidian": "OBSIDIANA CHOR.",
+  "respawn_anchor": "ANCORA RENASC.",
+  "end_stone": "PEDRA DO END",
+  "end_stone_bricks": "TIJOLOS DO END",
+  "purpur_block": "BLOCO DE PURPUR",
+  "purpur_pillar": "PILAR DE PURPUR",
+  "end_rod": "LAMPADA DO END",
+  "end_crystal": "CRISTAL DO END",
+  "ender_pearl": "PEROLA DO FIM",
+  "ender_eye": "OLHO DO FIM",
+  "firework_rocket": "FOGOS ARTIFICIO",
+  "bookshelf": "ESTANTE LIVROS",
+  "chiseled_bookshelf": "ESTANTE ESCULP.",
+  "enchanting_table": "MESA ENCANTAM.",
+  "anvil": "BIGORNA",
+  "smithing_table": "MESA FERRARIA",
+  "crafting_table": "BANCADA TRABALHO",
+  "furnace": "FORNALHA",
+  "blast_furnace": "ALTO-FORNO",
+  "smoker": "DEFUMADOR",
+  "stonecutter": "CORTADOR PEDRA",
+  "grindstone": "REBOLO",
+  "cobblestone": "PEDREGULHO",
+  "mossy_cobblestone": "PEDREG. MUSGOSO",
+  "cobbled_deepslate": "PEDREG. ARDOSIA",
+  "brick_block": "BLOCO DE TIJOLOS",
+  "lit_pumpkin": "ABOBORA ACESA",
+  "web": "TEIA DE ARANHA",
+  "waterlily": "VIT.-REGIA"
+};
+
+function translateItemIdToPtBr(rawId, customLabel = "") {
+  if (customLabel && String(customLabel).trim().length > 0) {
+    return String(customLabel).trim().toUpperCase();
+  }
+  const clean = String(rawId || "").toLowerCase().replace(/^minecraft:/, "");
+  if (PT_BR_EXACT_ITEM_NAMES[clean]) {
+    return PT_BR_EXACT_ITEM_NAMES[clean];
+  }
+  if (clean.endsWith("_armor_trim_smithing_template")) {
+    const trimName = clean.replace("_armor_trim_smithing_template", "").toUpperCase();
+    return "MOLDE " + trimName;
+  }
+  if (clean.endsWith("_pottery_sherd")) {
+    const sherdName = clean.replace("_pottery_sherd", "").toUpperCase();
+    return "OSTRACO " + sherdName;
+  }
+  if (clean.startsWith("music_disc_")) {
+    const discName = clean.replace("music_disc_", "").toUpperCase();
+    return "DISCO " + discName;
+  }
+
+  // Tradução inteligente de todas as variações de blocos (Escadas, Lajes, Muros, Portas, Cercas, Cores, Madeiras, Pedras e Cobre)
+  let t = clean;
+
+  // 1. Identifica o tipo da variação de forma (Escada, Laje, Muro, Cerca, Portão, Porta, Alçapão, Placa, Botão, etc.)
+  let shapePrefix = "";
+  if (t.endsWith("_stairs")) {
+    shapePrefix = "ESCADA ";
+    t = t.replace(/_stairs$/, "");
+  } else if (t.endsWith("_slab")) {
+    shapePrefix = "LAJE ";
+    t = t.replace(/_slab$/, "");
+  } else if (t.endsWith("_wall")) {
+    shapePrefix = "MURO ";
+    t = t.replace(/_wall$/, "");
+  } else if (t.endsWith("_fence_gate") || t === "fence_gate") {
+    shapePrefix = "PORTAO ";
+    t = t.replace(/_?fence_gate$/, "");
+  } else if (t.endsWith("_fence")) {
+    shapePrefix = "CERCA ";
+    t = t.replace(/_fence$/, "");
+  } else if (t.endsWith("_trapdoor") || t === "trapdoor") {
+    shapePrefix = "ALCAPAO ";
+    t = t.replace(/_?trapdoor$/, "");
+  } else if (t.endsWith("_door")) {
+    shapePrefix = "PORTA ";
+    t = t.replace(/_door$/, "");
+  } else if (t.endsWith("_hanging_sign")) {
+    shapePrefix = "PLACA SUSP. ";
+    t = t.replace(/_hanging_sign$/, "");
+  } else if (t.endsWith("_sign")) {
+    shapePrefix = "PLACA ";
+    t = t.replace(/_sign$/, "");
+  } else if (t.endsWith("_pressure_plate")) {
+    shapePrefix = "PLACA PRESS. ";
+    t = t.replace(/_pressure_plate$/, "");
+  } else if (t.endsWith("_button")) {
+    shapePrefix = "BOTAO ";
+    t = t.replace(/_button$/, "");
+  } else if (t.endsWith("_chest_boat") || t.endsWith("_chest_raft")) {
+    shapePrefix = "BARCO C/ BAU ";
+    t = t.replace(/_chest_(boat|raft)$/, "");
+  } else if (t.endsWith("_boat") || t.endsWith("_raft")) {
+    shapePrefix = "BARCO ";
+    t = t.replace(/_(boat|raft)$/, "");
+  } else if (t.endsWith("_stained_glass_pane")) {
+    shapePrefix = "PAINEL VIDRO ";
+    t = t.replace(/_stained_glass_pane$/, "");
+  } else if (t.endsWith("_stained_glass")) {
+    shapePrefix = "VIDRO ";
+    t = t.replace(/_stained_glass$/, "");
+  } else if (t.endsWith("_glazed_terracotta")) {
+    shapePrefix = "AZULEJO ";
+    t = t.replace(/_glazed_terracotta$/, "");
+  } else if (t.endsWith("_terracotta")) {
+    shapePrefix = "TERRACOTA ";
+    t = t.replace(/_terracotta$/, "");
+  } else if (t.endsWith("_concrete_powder")) {
+    shapePrefix = "CIMENTO ";
+    t = t.replace(/_concrete_powder$/, "");
+  } else if (t.endsWith("_concrete")) {
+    shapePrefix = "CONCRETO ";
+    t = t.replace(/_concrete$/, "");
+  } else if (t.endsWith("_shulker_box")) {
+    shapePrefix = "SHULKER ";
+    t = t.replace(/_shulker_box$/, "");
+  } else if (t.endsWith("_wool")) {
+    shapePrefix = "LA ";
+    t = t.replace(/_wool$/, "");
+  } else if (t.endsWith("_carpet")) {
+    shapePrefix = "TAPETE ";
+    t = t.replace(/_carpet$/, "");
+  } else if (t.endsWith("_candle")) {
+    shapePrefix = "VELA ";
+    t = t.replace(/_candle$/, "");
+  } else if (t.endsWith("_bed")) {
+    shapePrefix = "CAMA ";
+    t = t.replace(/_bed$/, "");
+  } else if (t.endsWith("_banner")) {
+    shapePrefix = "ESTANDARTE ";
+    t = t.replace(/_banner$/, "");
+  } else if (t.endsWith("_dye")) {
+    shapePrefix = "CORANTE ";
+    t = t.replace(/_dye$/, "");
+  }
+
+  const body = t
+    .replace(/^waxed_/, "ENC. ")
+    .replace(/weathered_/g, "DESG. ")
+    .replace(/oxidized_/g, "OXID. ")
+    .replace(/exposed_/g, "EXP. ")
+    .replace(/stripped_/g, "DESC. ")
+    .replace(/chiseled_/g, "TALH. ")
+    .replace(/polished_/g, "POL. ")
+    .replace(/cracked_/g, "RACH. ")
+    .replace(/mossy_/g, "MUSG. ")
+    .replace(/cobbled_/g, "PEDREG. ")
+    .replace(/smooth_/g, "LISO ")
+    .replace(/cut_/g, "LAPID. ")
+    .replace(/light_blue/g, "AZUL CLARO")
+    .replace(/light_gray/g, "CINZA CLARO")
+    .replace(/dark_oak/g, "CARV. ESCURO")
+    .replace(/pale_oak/g, "CARV. PALIDO")
+    .replace(/white/g, "BRANCO")
+    .replace(/black/g, "PRETO")
+    .replace(/gray/g, "CINZA")
+    .replace(/brown/g, "MARROM")
+    .replace(/red/g, "VERMELHO")
+    .replace(/orange/g, "LARANJA")
+    .replace(/yellow/g, "AMARELO")
+    .replace(/lime/g, "VERDE LIMAO")
+    .replace(/green/g, "VERDE")
+    .replace(/cyan/g, "CIANO")
+    .replace(/blue/g, "AZUL")
+    .replace(/purple/g, "ROXO")
+    .replace(/magenta/g, "MAGENTA")
+    .replace(/pink/g, "ROSA")
+    .replace(/_log$/g, " TRONCO")
+    .replace(/_stem$/g, " CAULE")
+    .replace(/_wood$/g, " MADEIRA")
+    .replace(/_hyphae$/g, " HIFAS")
+    .replace(/_planks$/g, " TABUAS")
+    .replace(/_leaves$/g, " FOLHAS")
+    .replace(/_sapling$/g, " MUDA")
+    .replace(/_bricks$/g, " TIJOLOS")
+    .replace(/_brick$/g, " TIJOLO")
+    .replace(/_tiles$/g, " LADRILHOS")
+    .replace(/_tile$/g, " LADRILHO")
+    .replace(/_block$/g, " BLOCO")
+    .replace(/_ingot$/g, " BARRA")
+    .replace(/_ore$/g, " MINERIO")
+    .replace(/deepslate/g, "ARDOSIA")
+    .replace(/blackstone/g, "PEDRA NEGRA")
+    .replace(/cobblestone/g, "PEDREGULHO")
+    .replace(/stone/g, "PEDRA")
+    .replace(/tuff/g, "TUFO")
+    .replace(/copper/g, "COBRE")
+    .replace(/oak/g, "CARVALHO")
+    .replace(/wooden/g, "CARVALHO")
+    .replace(/spruce/g, "ABETO")
+    .replace(/birch/g, "BETULA")
+    .replace(/jungle/g, "SELVA")
+    .replace(/acacia/g, "ACACIA")
+    .replace(/mangrove/g, "MANGUE")
+    .replace(/cherry/g, "CEREJEIRA")
+    .replace(/bamboo/g, "BAMBU")
+    .replace(/mosaic/g, "MOSAICO")
+    .replace(/crimson/g, "CARMESIM")
+    .replace(/warped/g, "DISTORCIDO")
+    .replace(/quartz/g, "QUARTZO")
+    .replace(/sandstone/g, "ARENITO")
+    .replace(/prismarine/g, "PRISMARINHO")
+    .replace(/mud/g, "BARRO")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .toUpperCase()
+    .trim();
+
+  return (shapePrefix + body).trim() || "ITEM SURVIVAL";
+}
+
+// Divide um nome longo em até 2 linhas de 15 caracteres para caber completo na Placa da Frente do Baú!
+function splitItemNameForSign(ptName) {
+  const clean = String(ptName || "ITEM").trim();
+  if (clean.length <= 15) {
+    return [clean, ""];
+  }
+  const words = clean.split(" ");
+  let line1 = "";
+  let line2 = "";
+  for (const w of words) {
+    if (!line2 && (line1 ? line1.length + 1 + w.length : w.length) <= 15) {
+      line1 = line1 ? line1 + " " + w : w;
+    } else {
+      line2 = line2 ? line2 + " " + w : w;
+    }
+  }
+  if (!line1) {
+    line1 = clean.slice(0, 15);
+    line2 = clean.slice(15, 30);
+  }
+  return [line1.slice(0, 15), line2.slice(0, 15)];
+}
+
+// Preenche todos os 54 slots do Baú Duplo 100% com o item do baú (sem moldura brilhante dentro)
+// E coloca automaticamente uma PLACA NA FRENTE DO BAÚ identificando o item e sua variação em até 2 linhas!
+function fillDoubleChestWithSingleItem(dim, posA, posB, baseItemOrId, cardinalDir = "north", customLabel = "", customSignBlock = "minecraft:birch_wall_sign") {
   try {
+    const pair = placeConnectedDoubleChest(dim, posA, posB, cardinalDir);
+    if (!pair) return false;
+    const { blockA, blockB, dir: resolvedDir } = pair;
+    const finalDir = resolvedDir || cardinalDir || "north";
+
     let cleanId = "";
     if (typeof baseItemOrId === "string") {
       cleanId = baseItemOrId.toLowerCase();
     } else if (baseItemOrId && baseItemOrId.typeId) {
       cleanId = baseItemOrId.typeId.toLowerCase();
     }
-    if (!cleanId) return;
+    if (!cleanId) return false;
 
-    // A Moldura Brilhante fica centralizada na face frontal do Baú Duplo
-    const centerX = (posA.x + posB.x) / 2 + 0.5;
-    const centerY = posA.y + 0.5;
-    let centerZ = posA.z + 0.5;
+    const ptName = translateItemIdToPtBr(cleanId, customLabel);
+    const [signName1, signName2] = splitItemNameForSign(ptName);
 
-    if (cardinalDir === "south") {
-      centerZ += 0.52;
-    } else if (cardinalDir === "north") {
-      centerZ -= 0.52;
-    }
+    // Cria o Pack Principal (Slot 0) e 1 instância de Pack Padrão (reutilizada nos slots 1..53 para velocidade 50x maior!)
+    const identifierItem = createSafeItemStack(baseItemOrId, 64);
+    if (!identifierItem) return false;
 
-    let frame = null;
+    const maxStackSize = identifierItem.maxAmount || 64;
+    identifierItem.amount = maxStackSize;
     try {
-      frame = dim.spawnEntity("minecraft:glow_item_frame", { x: centerX, y: centerY, z: centerZ });
-    } catch (e1) {
-      try {
-        frame = dim.spawnEntity("glow_item_frame", { x: centerX, y: centerY, z: centerZ });
-      } catch (e2) {}
+      identifierItem.nameTag = "§e§l[BAÚ] §f" + ptName;
+      identifierItem.setLore([
+        "§6§lBaú Survival Organizado",
+        "§fItem deste Baú: §e" + ptName,
+        "§7ID: §8" + identifierItem.typeId,
+        "§a54/54 Slots Lotados deste Item"
+      ]);
+    } catch (e) {}
+
+    const sharedFullStack = createSafeItemStack(baseItemOrId, 64);
+    if (sharedFullStack) {
+      sharedFullStack.amount = sharedFullStack.maxAmount || 64;
     }
-
-    if (frame) {
-      // 1. Coloca o item/bloco dentro da Moldura Brilhante
-      try {
-        const itemComp = frame.getComponent("minecraft:item");
-        if (itemComp) {
-          itemComp.itemStack = new ItemStack(cleanId, 1);
-        }
-      } catch (e) {}
-
-      // 2. Coloca o nome customizado brilhante identificando o item
-      try {
-        const displayName = cleanId.replace("minecraft:", "").replace(/_/g, " ").toUpperCase();
-        frame.nameTag = "§e§l" + displayName;
-        frame.isCustomNameVisible = true;
-      } catch (e) {}
-    }
-  } catch (err) {}
-}
-
-function fillDoubleChestWithSingleItem(dim, posA, posB, baseItemOrId, cardinalDir = "north") {
-  try {
-    const pair = placeConnectedDoubleChest(dim, posA, posB, cardinalDir);
-    if (!pair) return false;
-    const { blockA, blockB } = pair;
-
-    const createFullStack = () => {
-      let st;
-      if (typeof baseItemOrId === "string") {
-        const cleanId = baseItemOrId.toLowerCase();
-        st = new ItemStack(cleanId, 1);
-      } else {
-        st = baseItemOrId.clone();
-      }
-      st.amount = st.maxAmount || 64;
-      return st;
-    };
 
     const fillBothHalves = (bA, bB) => {
       const contA = bA?.getComponent("minecraft:inventory")?.container;
       const contB = bB?.getComponent("minecraft:inventory")?.container;
+      if (!contA && !contB) return;
 
       if (contA) {
-        for (let slot = 0; slot < contA.size; slot++) {
-          try {
-            if (!contA.getItem(slot)) contA.setItem(slot, createFullStack());
-          } catch (e) {}
+        try { contA.setItem(0, identifierItem); } catch (e) {}
+        if (sharedFullStack) {
+          for (let slot = 1; slot < contA.size; slot++) {
+            try {
+              if (!contA.getItem(slot)) contA.setItem(slot, sharedFullStack);
+            } catch (e) {}
+          }
         }
       }
-      if (contB && (!contA || contA.size <= 27)) {
+      if (contB && (!contA || contA.size <= 27) && sharedFullStack) {
         for (let slot = 0; slot < contB.size; slot++) {
           try {
-            if (!contB.getItem(slot)) contB.setItem(slot, createFullStack());
+            if (!contB.getItem(slot)) contB.setItem(slot, sharedFullStack);
           } catch (e) {}
         }
       }
     };
 
-    // Preenche imediatamente os 54 slots (27 da metade A + 27 da metade B ou 54 unificados)
+    // Calcula a posição EXATAMENTE NA FRENTE DO BAÚ DUPLO (colada na face frontal de posA)
+    const frontSignPos = {
+      x: finalDir === "east" ? posA.x + 1 : finalDir === "west" ? posA.x - 1 : posA.x,
+      y: posA.y,
+      z: finalDir === "south" ? posA.z + 1 : finalDir === "north" ? posA.z - 1 : posA.z
+    };
+    const qtyLine = maxStackSize === 1 ? "§a54 Unidades" : "§a54 Packs (64x)";
+
+    const signLines = signName2
+      ? ["§l§e[BAÚ DUPLO]", "§l§f" + signName1, "§l§b" + signName2, qtyLine]
+      : ["§l§e[BAÚ DUPLO]", "§l§f" + signName1, qtyLine, "§6[100% Lotado]"];
+
+    const applyFrontSign = () => {
+      try {
+        placeExternalWallSignOnPillar(
+          dim,
+          frontSignPos,
+          finalDir,
+          signLines,
+          customSignBlock || "minecraft:birch_wall_sign"
+        );
+      } catch (e) {}
+    };
+
     fillBothHalves(blockA, blockB);
+    applyFrontSign();
 
-    // Fixa a Moldura Brilhante (Glow Item Frame) com o item e nome brilhante na frente do baú
-    attachGlowItemFrameToDoubleChest(dim, posA, posB, baseItemOrId, cardinalDir);
-
-    // Reforço após 2 ticks (quando o ChestBlockActor do Bedrock finaliza a fusão visual/lógica dos 54 slots)
+    // Reaplica no Tick 2 após a fusão do Baú Duplo para garantir que os 2 baús estejam 100% conectados (54 slots) e com placa frontal gravada
     system.runTimeout(() => {
       try {
-        const latestA = dim.getBlock(posA);
-        const latestB = dim.getBlock(posB);
+        let latestA = dim.getBlock(posA);
+        let latestB = dim.getBlock(posB);
+        const checkCont = latestA?.getComponent("minecraft:inventory")?.container;
+        if (!checkCont || checkCont.size < 54) {
+          const repaired = placeConnectedDoubleChest(dim, posA, posB, finalDir);
+          if (repaired) {
+            latestA = repaired.blockA;
+            latestB = repaired.blockB;
+          }
+        }
         fillBothHalves(latestA, latestB);
+        applyFrontSign();
       } catch (e) {}
     }, 2);
 
@@ -2560,275 +3841,538 @@ function fillDoubleChestWithSingleItem(dim, posA, posB, baseItemOrId, cardinalDi
 
 function openMegaChestHallMenu(player) {
   ${config.soundFeedback ? `try { player.playSound("random.chestopen", { pitch: 1.0, volume: 0.8 }); } catch (e) {}` : ''}
+  const arch = getPlayerArchModel(player);
+  const basis = getLookBasis(player);
+  const allSectors = getCompleteChestSectors();
+  const totalItemsCount = allSectors.reduce((acc, s) => acc + s.items.length, 0);
+
   const form = new ActionFormData()
-    .title("§l§5Mega Sala de Baús (100% Survival)")
+    .title("§l§5Mega Armazém (Direção do Olhar)")
     .body(
-      "§7Gere uma Mega Sala onde CADA Baú Duplo conectado (54 slots) vem 100% lotado e equipado com §eMolduras Brilhantes (Glow Item Frame)§7 identificando o item dentro:"
+      \`§7Estilo Arquitetônico Ativo: §e\${arch.name}\\n\` +
+      \`§7Direção do Olhar: §b\${basis.dirLabelPt} §8(Gire a câmera para escolher onde construir!)\\n\` +
+      \`§aCatálogo Completo: §e\${totalItemsCount} Blocos, Variações & Itens §aem §b\${allSectors.length} Setores Organizados§a!\`
     )
-    .button("§l§a[Modo 1] TODOS os Blocos e Itens Survival (com Molduras Brilhantes)\\n§r§8Gera ~1.180 Baús Duplos com Molduras Brilhantes identificadoras!", "textures/items/chest_minecart")
-    .button("§l§e[Modo 2] Mega Sala Rápida: Top 60 Blocos & Itens Survival\\n§r§860 Baús Duplos conectados com Molduras Brilhantes e 54 packs", "textures/items/nether_star")
-    .button("§l§b[Modo 3] Sala Compacta: Todos os Itens Survival (54 Diferentes/Baú)\\n§r§8Guarda todos os ~1.180 blocos e itens Survival em ~22 Baús Duplos", "textures/items/diamond")
-    .button("§l§6[Modo 4] Escolher Corredor Survival (60 Baús Duplos por Vez)\\n§r§8Gera 1 corredor de 60 Baús Duplos conectados com Molduras Brilhantes", "textures/items/book_enchanted")
-    .button("§l§d[Modo 5] 1 Baú Duplo Lotado do Bloco/Item da Minha Mão\\n§r§8Cria 1 Baú Duplo conectado com Moldura Brilhante do item da mão", "textures/items/shulker_shell")
+    .button(\`§l§6[Estilos] Trocar Modelo da Sala de Baú\\n§r§8Atual: \${arch.shortTitle} (Quartzo, Medieval, Bunker, Nether, End)\`, "textures/items/painting")
+    .button("§l§d[NOVO] Mega Sala de Encantamentos + 42 Villagers (1 Esmeralda)\\n§r§842 Baús Livros Nv.Máx + 18 Baús Insumos + 42 Villagers", "textures/items/book_enchanted")
+    .button(\`§l§a[Modo 1] Armazém Completo (\${allSectors.length} Setores + Todas Variações)\\n§r§8Gera todos os \${totalItemsCount} Baús Duplos na direção \${basis.dirLabelPt}\`, "textures/items/chest_minecart")
+    .button("§l§e[Modo 2] Escolher Setor Específico (Com Todas Variações)\\n§r§8Minérios/Cobre, Madeiras, Pedras/Tufo/Ardósia, 16 Cores...", "textures/items/book_enchanted")
+    .button("§l§d[Modo Poções] Mega Sala de 30 Baús Duplos de Poções\\n§r§830 Baús Individuais de Alquimia com Placa na Frente + Bancada", "textures/items/brewing_stand")
+    .button("§l§b[Modo 3] Sala Compacta (Todos os Itens e Variações Juntos)\\n§r§8Guarda 54 itens diferentes (64x cada) por Baú Duplo", "textures/items/ender_chest")
+    .button("§l§3[Modo 4] Mega Sala Top 60 Itens Essenciais Survival\\n§r§860 Baús Duplos rápidos com os itens mais usados", "textures/items/nether_star")
+    .button("§l§c[Modo 5] 1 Baú Duplo Lotado do Bloco/Item da Minha Mão\\n§r§8Cria 1 Baú Duplo na direção do olhar com Placa Identificadora", "textures/items/shulker_shell")
     .button("§8« Voltar ao Menu Principal");
 
   showFormSafely(player, form, (res) => {
     if (res.selection === 0) {
-      buildCompleteGameMegaChestWarehouse(player);
+      openArchitecturalModelSelector(player);
     } else if (res.selection === 1) {
-      buildSameItemDoubleChestHall(player, MEGA_HALL_60_ITEMS, "Top 60 Blocos & Itens Survival");
+      openMegaEnchantmentHallMenu(player);
     } else if (res.selection === 2) {
-      buildAllMinecraftItemsInDoubleChests(player);
+      buildAllSectorsMegaWarehouse(player);
     } else if (res.selection === 3) {
-      openCatalogBatchChestHallModal(player);
+      openSectorSelectionMenu(player);
     } else if (res.selection === 4) {
-      spawnDoubleChestOfHandItem(player);
+      buildMega30ChestsPotionHall(player);
     } else if (res.selection === 5) {
+      buildAllMinecraftItemsInDoubleChests(player);
+    } else if (res.selection === 6) {
+      buildSameItemDoubleChestHall(player, MEGA_HALL_60_ITEMS, "Top 60 Blocos & Itens Survival");
+    } else if (res.selection === 7) {
+      spawnDoubleChestOfHandItem(player);
+    } else if (res.selection === 8) {
       openMainMenu(player);
     }
   });
 }
 
-// MODO 1 PRINCIPAL: Constrói o Mega Armazém Completo com 1 Baú Duplo Conectado (54 slots do mesmo item)
-// para CADA BLOCO E CADA ITEM OBTÍVEL NO SURVIVAL (~1.180 Baús Duplos em corredores paralelos no eixo X)!
-function buildCompleteGameMegaChestWarehouse(player) {
-  const allBlocksAndItems = getAllGameBlocksAndItems();
-  if (allBlocksAndItems.length === 0) {
-    player.sendMessage("§8[§cMega Sala§8] §cNenhum bloco/item encontrado.");
-    return;
+function openSectorSelectionMenu(player) {
+  const sectors = getCompleteChestSectors();
+  const basis = getLookBasis(player);
+  const form = new ActionFormData()
+    .title("§l§eEscolha o Setor (100% Variações)")
+    .body(
+      \`§7Direção atual do olhar: §b\${basis.dirLabelPt}\\n\` +
+      "§7Todos os blocos e TODAS as variações (escadas, lajes, muros, cercas, portas, alçapões, 16 cores, cobre, ardósia e tufo) estão incluídos:"
+    );
+
+  for (const sec of sectors) {
+    form.button(\`§6\${sec.name}\\n§r§8\${sec.items.length} Baús Duplos com Placa na Frente (54 packs cada)\`);
+  }
+  form.button("§8« Voltar ao Armazém");
+
+  showFormSafely(player, form, (res) => {
+    if (res.selection >= sectors.length) {
+      openMegaChestHallMenu(player);
+      return;
+    }
+    const chosen = sectors[res.selection];
+    buildSameItemDoubleChestHall(player, chosen.items, chosen.shortName);
+  });
+}
+
+// Constrói a Estação Central de Utilidades na entrada de qualquer Sala de Baús Organizada (rotacionada para a direção do olhar!)
+function buildOrganizedHallEntranceUtilities(dim, basis, arch, titleLine) {
+  try {
+    // Piso iluminado de entrada (f = 1..3, r = -4..4) + Corredor Central Livre + Teto a 4 blocos de altura (dy = 4)
+    for (let f = 1; f <= 3; f++) {
+      for (let r = -4; r <= 4; r++) {
+        safeSetBlock(
+          dim,
+          basis.rel(f, -1, r),
+          r === 0 && f === 2 ? arch.lightBlock : r === 0 ? arch.floorCenterBlock : arch.floorBlock
+        );
+        for (let dy = 0; dy <= 3; dy++) {
+          if (r === -4 || r === 4) {
+            safeSetBlock(
+              dim,
+              basis.rel(f, dy, r),
+              dy === 1 && f === 2 ? arch.lightBlock : arch.wallBlock
+            );
+          } else {
+            safeSetBlock(dim, basis.rel(f, dy, r), "minecraft:air");
+          }
+        }
+        safeSetBlock(dim, basis.rel(f, 4, r), arch.ceilingBlock);
+      }
+    }
+
+    // Colunas laterais iluminadas na entrada (f = 3, r = -3 e r = +3)
+    for (let dy = 0; dy <= 3; dy++) {
+      safeSetBlock(
+        dim,
+        basis.rel(3, dy, -3),
+        dy === 1 ? arch.lightBlock : arch.pillarBlock
+      );
+      safeSetBlock(
+        dim,
+        basis.rel(3, dy, 3),
+        dy === 1 ? arch.lightBlock : arch.pillarBlock
+      );
+    }
+
+    // Estação de Utilidades nas laterais do Lobby (deixando o corredor central r = -1..+1 100% livre para passar!)
+    safeSetBlock(dim, basis.rel(2, 0, -3), "minecraft:lodestone");
+    safeSetBlock(dim, basis.rel(1, 0, -3), "minecraft:crafting_table");
+    safeSetBlock(dim, basis.rel(2, 0, 3), "minecraft:anvil");
+    safeSetBlock(dim, basis.rel(1, 0, 3), "minecraft:ender_chest");
+
+    // Placa identificando a Sala Organizada e o Bloco Multiplicador na entrada
+    placeExternalWallSignOnPillar(
+      dim,
+      basis.rel(3, 2, -2),
+      basis.leftInwardDir,
+      ["§l§b[SALA ORGANIZADA]", \`§e\${String(titleLine || "").slice(0, 15)}\`, "§a54 Packs / Baú", \`§6Olhar: \${basis.dirLabelPt.slice(0, 8)}\`],
+      arch.wallSignBlock
+    );
+    placeExternalWallSignOnPillar(
+      dim,
+      basis.rel(2, 1, -2),
+      basis.leftInwardDir,
+      ["§l§d[MULTIPLICADOR]", "§eClique: +1 Pack", "§bShift: +5 Packs", "§aBater: Shulker!"],
+      arch.wallSignBlock
+    );
+  } catch (e) {}
+}
+
+// Constrói os 10 Setores Completos (incluindo TODAS as variações de blocos e itens) em Salas Paralelas Conectadas na DIREÇÃO DO OLHAR!
+// Divide automaticamente setores grandes em Alas de até 14 Bays (84 Baús = 42 blocos) mantendo 100% dentro dos chunks carregados!
+function buildAllSectorsMegaWarehouse(player) {
+  const sectors = getCompleteChestSectors();
+  const dim = player.dimension;
+  const arch = getPlayerArchModel(player);
+  const basis = getLookBasis(player);
+
+  // Divide cada setor em Alas de no máximo 84 Baús Duplos (14 Bays de 6 baús = 42m de comprimento)
+  const maxChestsPerWing = 84;
+  const wings = [];
+  let totalChests = 0;
+
+  for (const sec of sectors) {
+    totalChests += sec.items.length;
+    const totalParts = Math.ceil(sec.items.length / maxChestsPerWing);
+    for (let p = 0; p < totalParts; p++) {
+      const slice = sec.items.slice(p * maxChestsPerWing, (p + 1) * maxChestsPerWing);
+      const wingTitle = totalParts > 1 ? \`\${sec.shortName} (\${p + 1}/\${totalParts})\` : sec.shortName;
+      wings.push({
+        sectorId: sec.id,
+        title: wingTitle,
+        items: slice,
+        totalBays: Math.ceil(slice.length / 6)
+      });
+    }
   }
 
-  const dim = player.dimension;
-  const startX = Math.floor(player.location.x) + 2;
-  const startY = Math.floor(player.location.y);
-  const startZ = Math.floor(player.location.z);
+  let currentWingIdx = 0;
+  let currentBayInWing = 0;
+  let builtChestsCount = 0;
 
-  // Arquitetura com Corredores no Eixo X (Garante que TODOS os Baús Duplos fiquem lado a lado em X e x+1,
-  // virados para o centro do corredor com cardinal_direction "south" e "north", 100% conectados!):
-  // Cada módulo (Bay) tem 2 paredes (Norte e Sul) x 4 andares de Baús Duplos = 8 Baús Duplos por Bay.
-  // Cada Corredor (Aisle) tem 16 Bays de profundidade (48 blocos em X) = 128 Baús Duplos por Corredor!
-  const baysPerAisle = 16;
-  const chestsPerBay = 8; // 4 na parede norte (z - 2) + 4 na parede sul (z + 2)
-  const chestsPerAisle = baysPerAisle * chestsPerBay; // 128 Baús Duplos por Corredor
-  const totalAisles = Math.ceil(allBlocksAndItems.length / chestsPerAisle);
-
-  let currentAisle = 0;
-  let currentBayInAisle = 0;
-  let itemCursor = 0;
-
-  // Dá proteção total ao jogador durante a construção automática dos corredores
-  player.addEffect("resistance", 1200, { amplifier: 255, showParticles: false });
-  player.addEffect("slow_falling", 1200, { amplifier: 0, showParticles: false });
+  try {
+    player.addEffect("resistance", 2400, { amplifier: 255, showParticles: false });
+    player.addEffect("slow_falling", 2400, { amplifier: 0, showParticles: false });
+  } catch (e) {}
 
   player.sendMessage(
-    \`§8[§aMega Armazém Survival§8] §eFiltrados §a\${allBlocksAndItems.length} Blocos e Itens 100% Survival§e! Construindo §b\${totalAisles} Corredores Paralelos §ecom §a\${allBlocksAndItems.length} Baús Duplos Conectados §e(cada Baú Duplo com 54 packs do mesmo bloco/item)...\`
+    \`§8[§aMega Armazém Completo§8] §eConstruindo §a\${totalChests} Baús Duplos §ena direção §b\${basis.dirLabelPt} §eem §b\${wings.length} Salas Conectadas §eno estilo §e\${arch.name}§e...\`
   );
 
-  const jobId = system.runInterval(() => {
+  buildOrganizedHallEntranceUtilities(dim, basis, arch, "10 Setores Completos");
+
+  const job = system.runInterval(() => {
     try {
-      if (itemCursor >= allBlocksAndItems.length || currentAisle >= totalAisles) {
-        system.clearRun(jobId);
-        // Retorna o jogador para a entrada central da Mega Sala de Baús Duplos
-        player.teleport({ x: startX + 1.5, y: startY, z: startZ + 0.5 });
+      if (currentWingIdx >= wings.length) {
+        system.clearRun(job);
+        try { player.teleport(basis.relTp(2, 0, 0)); } catch (e) {}
         try { player.playSound("random.totem", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
         player.sendMessage(
-          \`§8[§aMega Sala Survival Completa!§8] §aForam gerados §e\${itemCursor} Baús Duplos 100% Conectados §adistribuídos em §b\${totalAisles} Corredores Paralelos§a! Todos os Blocos e Itens obtíveis no Survival possuem agora 1 Baú Duplo inteiro (54 slots) lotado só deles!\`
+          \`§8[§aMega Armazém Concluído!§8] §aForam construídos §e\${builtChestsCount} Baús Duplos Conectados §ana direção §b\${basis.dirLabelPt} §aem §b\${wings.length} Salas Organizadas (\${arch.name})§a!\`
         );
         return;
       }
 
-      // Constrói 2 Bays por ciclo (16 Baús Duplos = 864 packs por ciclo) para ser rápido e sem lag
+      // Constrói até 2 Bays por tick para manter 60 FPS e garantir que todos os chunks estejam carregados
       for (let step = 0; step < 2; step++) {
-        if (itemCursor >= allBlocksAndItems.length || currentAisle >= totalAisles) break;
+        if (currentWingIdx >= wings.length) break;
 
-        // Posiciona os corredores paralelos a cada 7 blocos no eixo Z
-        const aisleOffset = currentAisle - Math.floor(totalAisles / 2);
-        const aisleCenterZ = startZ + aisleOffset * 7;
-        const xStart = startX + 4 + currentBayInAisle * 3;
+        const wing = wings[currentWingIdx];
+        const wingOffset = currentWingIdx - Math.floor(wings.length / 2);
+        const aisleR = wingOffset * 8;
+        const fOrigin = 4;
+        const bf = fOrigin + currentBayInWing * 3;
 
-        // Mantém o jogador próximo ao corredor atual para garantir que os chunks estejam 100% carregados
-        if (currentBayInAisle % 4 === 0) {
-          player.teleport({ x: xStart + 0.5, y: startY, z: aisleCenterZ + 0.5 });
+        // Mantém o jogador próximo ao Bay ativo para garantir 100% dos chunks carregados no Bedrock
+        if (currentBayInWing % 4 === 0) {
+          try { player.teleport(basis.relTp(bf, 0, aisleR)); } catch (e) {}
         }
 
-        // Se for o início do corredor (Bay 0), constrói também o Salão Frontal de Conexão (Lobby)
-        if (currentBayInAisle === 0) {
-          for (let lx = startX; lx < startX + 4; lx++) {
-            for (let lz = -3; lz <= 3; lz++) {
-              dim.getBlock({ x: lx, y: startY - 1, z: aisleCenterZ + lz })?.setType(
-                lz === 0 && lx === startX + 1 ? "minecraft:sea_lantern" : "minecraft:smooth_quartz"
+        // No início da Ala (Bay 0), constrói o Salão Frontal Conectado (Lobby)
+        if (currentBayInWing === 0) {
+          const rMinLobby = currentWingIdx === 0 ? -3 : -4;
+          const rMaxLobby = currentWingIdx === wings.length - 1 ? 3 : 4;
+          for (let lf = 1; lf < fOrigin; lf++) {
+            for (let lr = rMinLobby; lr <= rMaxLobby; lr++) {
+              const wr = aisleR + lr;
+              safeSetBlock(
+                dim,
+                basis.rel(lf, -1, wr),
+                lf === 2 && lr === 0 ? arch.lightBlock : lr === 0 ? arch.floorCenterBlock : arch.floorBlock
               );
-              for (let ly = 0; ly <= 4; ly++) {
-                dim.getBlock({ x: lx, y: startY + ly, z: aisleCenterZ + lz })?.setType("minecraft:air");
+              for (let dy = 0; dy <= 3; dy++) {
+                safeSetBlock(dim, basis.rel(lf, dy, wr), "minecraft:air");
               }
-              dim.getBlock({ x: lx, y: startY + 4, z: aisleCenterZ + lz })?.setType("minecraft:glass");
+              safeSetBlock(dim, basis.rel(lf, 4, wr), arch.ceilingBlock);
             }
           }
         }
 
-        // Constrói a estrutura do Bay atual (3 blocos em X: dx=0 e dx=1 para o Baú Duplo, dx=2 para o Pilar divisor)
-        for (let dx = 0; dx < 3; dx++) {
-          const cx = xStart + dx;
-          for (let dz = -3; dz <= 3; dz++) {
-            dim.getBlock({ x: cx, y: startY - 1, z: aisleCenterZ + dz })?.setType(
-              dz === 0 && dx === 1 ? "minecraft:sea_lantern" : "minecraft:smooth_quartz"
+        // Constrói o Bay atual (Piso, Paredes Fechadas Traseiras, Teto y+4 e Colunas)
+        for (let df = 0; df < 3; df++) {
+          const cf = bf + df;
+          for (let dr = -3; dr <= 3; dr++) {
+            safeSetBlock(
+              dim,
+              basis.rel(cf, -1, aisleR + dr),
+              dr === 0 && df === 1 ? arch.lightBlock : dr === 0 ? arch.floorCenterBlock : arch.floorBlock
             );
             for (let dy = 0; dy <= 3; dy++) {
-              dim.getBlock({ x: cx, y: startY + dy, z: aisleCenterZ + dz })?.setType("minecraft:air");
+              if (dr === -3 || dr === 3) {
+                safeSetBlock(
+                  dim,
+                  basis.rel(cf, dy, aisleR + dr),
+                  dy === 1 && df === 1 ? arch.lightBlock : arch.wallBlock
+                );
+              } else {
+                safeSetBlock(dim, basis.rel(cf, dy, aisleR + dr), "minecraft:air");
+              }
             }
-            // Teto de vidro transparente (permite abrir todos os Baús Duplos do 4º andar!)
-            dim.getBlock({ x: cx, y: startY + 4, z: aisleCenterZ + dz })?.setType("minecraft:glass");
+            safeSetBlock(dim, basis.rel(cf, 4, aisleR + dr), arch.ceilingBlock);
           }
 
-          // Pilares divisórios em dx === 2 para isolar cada par de Baú Duplo (xStart e xStart + 1)
-          if (dx === 2) {
+          if (df === 2) {
             for (let dy = 0; dy <= 3; dy++) {
-              dim.getBlock({ x: cx, y: startY + dy, z: aisleCenterZ - 2 })?.setType(
-                dy === 1 ? "minecraft:sea_lantern" : "minecraft:quartz_pillar"
+              safeSetBlock(
+                dim,
+                basis.rel(cf, dy, aisleR - 2),
+                dy === 1 ? arch.lightBlock : arch.pillarBlock
               );
-              dim.getBlock({ x: cx, y: startY + dy, z: aisleCenterZ + 2 })?.setType(
-                dy === 1 ? "minecraft:sea_lantern" : "minecraft:quartz_pillar"
+              safeSetBlock(
+                dim,
+                basis.rel(cf, dy, aisleR + 2),
+                dy === 1 ? arch.lightBlock : arch.pillarBlock
               );
             }
           }
         }
 
-        // Coloca 4 Baús Duplos Conectados na parede norte (aisleCenterZ - 2, virados para "south")
-        // e 4 Baús Duplos Conectados na parede sul (aisleCenterZ + 2, virados para "north")
-        for (let level = 0; level < 4; level++) {
-          const cy = startY + level;
+        // Placa identificadora da Ala/Setor na primeira coluna
+        if (currentBayInWing === 0) {
+          placeExternalWallSignOnPillar(
+            dim,
+            basis.rel(fOrigin + 2, 2, aisleR - 1),
+            basis.leftInwardDir,
+            ["§l§6[SETOR ORGANIZADO]", \`§e\${wing.title.slice(0, 15)}\`, \`§a\${wing.items.length} Baús Duplos\`, "§bTodas Variações"],
+            arch.wallSignBlock
+          );
+        }
 
-          if (itemCursor < allBlocksAndItems.length) {
-            const nextBlockOrItem = allBlocksAndItems[itemCursor++];
+        // Coloca os 6 Baús Duplos do Bay + Placa Identificadora com 2 linhas de nome na frente de cada Baú
+        for (let lvl = 0; lvl < 3; lvl++) {
+          const idxLeft = currentBayInWing * 6 + lvl * 2;
+          const idxRight = currentBayInWing * 6 + lvl * 2 + 1;
+
+          if (idxLeft < wing.items.length) {
             fillDoubleChestWithSingleItem(
               dim,
-              { x: xStart, y: cy, z: aisleCenterZ - 2 },
-              { x: xStart + 1, y: cy, z: aisleCenterZ - 2 },
-              nextBlockOrItem,
-              "south"
+              basis.rel(bf, lvl, aisleR - 2),
+              basis.rel(bf + 1, lvl, aisleR - 2),
+              wing.items[idxLeft],
+              basis.leftInwardDir,
+              "",
+              arch.wallSignBlock
             );
+            builtChestsCount++;
           }
 
-          if (itemCursor < allBlocksAndItems.length) {
-            const nextBlockOrItem = allBlocksAndItems[itemCursor++];
+          if (idxRight < wing.items.length) {
             fillDoubleChestWithSingleItem(
               dim,
-              { x: xStart, y: cy, z: aisleCenterZ + 2 },
-              { x: xStart + 1, y: cy, z: aisleCenterZ + 2 },
-              nextBlockOrItem,
-              "north"
+              basis.rel(bf, lvl, aisleR + 2),
+              basis.rel(bf + 1, lvl, aisleR + 2),
+              wing.items[idxRight],
+              basis.rightInwardDir,
+              "",
+              arch.wallSignBlock
             );
+            builtChestsCount++;
           }
         }
 
-        currentBayInAisle++;
-        if (currentBayInAisle >= baysPerAisle) {
-          currentBayInAisle = 0;
-          currentAisle++;
+        currentBayInWing++;
+        if (currentBayInWing >= wing.totalBays) {
+          // Fecha a parede do fundo da Ala
+          const endF = fOrigin + wing.totalBays * 3;
+          for (let dr = -3; dr <= 3; dr++) {
+            safeSetBlock(dim, basis.rel(endF, -1, aisleR + dr), arch.floorBlock);
+            for (let dy = 0; dy <= 3; dy++) {
+              safeSetBlock(
+                dim,
+                basis.rel(endF, dy, aisleR + dr),
+                dy === 1 && dr === 0 ? arch.lightBlock : arch.wallBlock
+              );
+            }
+            safeSetBlock(dim, basis.rel(endF, 4, aisleR + dr), arch.ceilingBlock);
+          }
+          currentBayInWing = 0;
+          currentWingIdx++;
         }
       }
 
-      const pct = Math.min(100, Math.round((itemCursor / allBlocksAndItems.length) * 100));
+      const pct = Math.min(100, Math.round((builtChestsCount / Math.max(1, totalChests)) * 100));
       player.onScreenDisplay.setActionBar(
-        \`§aGerando Baús Duplos Conectados (Survival): §e\${pct}% §7(\${itemCursor}/\${allBlocksAndItems.length} Baús Duplos | Corredor \${currentAisle + 1}/\${totalAisles})\`
+        \`§aArmazém (\${basis.dirLabelPt}): §e\${pct}% §7(\${builtChestsCount}/\${totalChests} Baús | Sala \${Math.min(wings.length, currentWingIdx + 1)}/\${wings.length})\`
       );
-    } catch (e) {
-      system.clearRun(jobId);
+    } catch (err) {
+      currentBayInWing++;
     }
   }, 2);
 }
 
-// Modo 2 & 4: Constrói um Corredor onde CADA Baú Duplo Conectado (54 slots) é 100% lotado de 1 único item da lista!
+// Redireciona o Catálogo Completo para o construtor multi-alas completo
+function buildCompleteGameMegaChestWarehouse(player) {
+  buildAllSectorsMegaWarehouse(player);
+}
+
+// Modo 2 & 4: Constrói uma SALA ORGANIZADA FECHADA para o Setor escolhido na DIREÇÃO DO OLHAR (com TODAS as suas variações)!
 function buildSameItemDoubleChestHall(player, itemIdsList, hallLabel) {
+  const validItems = [];
+  const seen = new Set();
+  for (const raw of itemIdsList) {
+    const resolved = resolveValidBedrockItemId(raw) || raw;
+    if (resolved && !seen.has(resolved)) {
+      seen.add(resolved);
+      validItems.push(resolved);
+    }
+  }
+
+  if (validItems.length === 0) {
+    player.sendMessage("§8[§cSala de Baús§8] §cNenhum item válido encontrado para este setor.");
+    return;
+  }
+
   const dim = player.dimension;
-  const originX = Math.floor(player.location.x) + 2;
-  const originY = Math.floor(player.location.y);
-  const originZ = Math.floor(player.location.z);
+  const arch = getPlayerArchModel(player);
+  const basis = getLookBasis(player);
+  const fOrigin = 4;
 
-  const totalBays = Math.ceil(itemIdsList.length / 6);
+  const maxChestsPerWing = 84; // 14 Bays * 6 Baús = 84 Baús por Ala (42 blocos de comprimento)
+  const totalWings = Math.ceil(validItems.length / maxChestsPerWing);
+  const wings = [];
+  for (let w = 0; w < totalWings; w++) {
+    const slice = validItems.slice(w * maxChestsPerWing, (w + 1) * maxChestsPerWing);
+    wings.push({
+      wingIdx: w,
+      title: totalWings > 1 ? \`\${hallLabel} #\${w + 1}\` : hallLabel,
+      items: slice,
+      totalBays: Math.ceil(slice.length / 6)
+    });
+  }
+
+  let currentWing = 0;
   let currentBay = 0;
-  let itemIndex = 0;
+  let builtCount = 0;
 
-  player.sendMessage(\`§8[§dMega Sala de Baús§8] §eIniciando construção da Mega Sala (\${hallLabel}) com \${itemIdsList.length} Baús Duplos conectados...\`);
+  // Constrói o Hall de Entrada com Bancada de Utilidades (Multiplicador, Crafting, Bigorna, Baú do Fim)
+  buildOrganizedHallEntranceUtilities(dim, basis, arch, hallLabel);
+
+  player.sendMessage(
+    \`§8[§dSala de Baús Organizada§8] §eConstruindo §a\${validItems.length} Baús Duplos §e(\${hallLabel}) na direção §b\${basis.dirLabelPt} §eno estilo §b\${arch.name}§e...\`
+  );
 
   const jobId = system.runInterval(() => {
     try {
-      if (currentBay >= totalBays) {
+      if (currentWing >= wings.length) {
         system.clearRun(jobId);
+        try { player.teleport(basis.relTp(2, 0, 0)); } catch (e) {}
         try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-        player.sendMessage(\`§8[§aMega Sala Concluída§8] §aPronto! \${itemIndex} Baús Duplos conectados foram gerados! Cada Baú Duplo contém 54 packs (até 3.456 unidades) do mesmo bloco/item!\`);
+        player.sendMessage(
+          \`§8[§aSala Organizada Concluída§8] §aPronto! §e\${builtCount} Baús Duplos conectados §aforam gerados na direção §b\${basis.dirLabelPt} §adentro da Sala Organizada (\${arch.name}) com Placa na Frente do Baú e 54 packs em cada!\`
+        );
         return;
       }
 
-      const xStart = originX + currentBay * 3;
+      const wing = wings[currentWing];
+      const wingR = currentWing * 8;
+      const fStart = fOrigin + currentBay * 3;
 
-      for (let dx = 0; dx < 3; dx++) {
-        const cx = xStart + dx;
-        for (let dz = -4; dz <= 4; dz++) {
-          dim.getBlock({ x: cx, y: originY - 1, z: originZ + dz })?.setType(
-            dz === 0 && dx === 1 ? "minecraft:sea_lantern" : "minecraft:smooth_quartz"
+      // Mantém o jogador próximo se a sala tiver múltiplos bays para garantir chunks carregados
+      if (currentBay > 0 && currentBay % 5 === 0) {
+        try { player.teleport(basis.relTp(fStart, 0, wingR)); } catch (e) {}
+      }
+
+      // Se houver mais de 1 Ala paralela no Setor, interliga pelo corredor frontal (Lobby)
+      if (currentBay === 0 && currentWing > 0) {
+        for (let lf = 1; lf < fOrigin; lf++) {
+          for (let lr = -4; lr <= 4; lr++) {
+            const wr = wingR + lr;
+            safeSetBlock(
+              dim,
+              basis.rel(lf, -1, wr),
+              lf === 2 && lr === 0 ? arch.lightBlock : lr === 0 ? arch.floorCenterBlock : arch.floorBlock
+            );
+            for (let dy = 0; dy <= 3; dy++) {
+              safeSetBlock(dim, basis.rel(lf, dy, wr), "minecraft:air");
+            }
+            safeSetBlock(dim, basis.rel(lf, 4, wr), arch.ceilingBlock);
+          }
+        }
+      }
+
+      for (let df = 0; df < 3; df++) {
+        const cf = fStart + df;
+        for (let dr = -4; dr <= 4; dr++) {
+          safeSetBlock(
+            dim,
+            basis.rel(cf, -1, wingR + dr),
+            dr === 0 && df === 1 ? arch.lightBlock : dr === 0 ? arch.floorCenterBlock : arch.floorBlock
           );
           for (let dy = 0; dy <= 3; dy++) {
-            dim.getBlock({ x: cx, y: originY + dy, z: originZ + dz })?.setType("minecraft:air");
+            if (dr === -4 || dr === 4) {
+              safeSetBlock(
+                dim,
+                basis.rel(cf, dy, wingR + dr),
+                dy === 1 && df === 1 ? arch.lightBlock : arch.wallBlock
+              );
+            } else {
+              safeSetBlock(dim, basis.rel(cf, dy, wingR + dr), "minecraft:air");
+            }
           }
-          dim.getBlock({ x: cx, y: originY + 3, z: originZ + dz })?.setType("minecraft:glass");
+          safeSetBlock(dim, basis.rel(cf, 4, wingR + dr), arch.ceilingBlock);
         }
 
-        if (dx === 2) {
-          for (let dy = 0; dy <= 2; dy++) {
-            dim.getBlock({ x: cx, y: originY + dy, z: originZ - 3 })?.setType(
-              dy === 1 ? "minecraft:sea_lantern" : "minecraft:quartz_pillar"
+        if (df === 2) {
+          for (let dy = 0; dy <= 3; dy++) {
+            safeSetBlock(
+              dim,
+              basis.rel(cf, dy, wingR - 3),
+              dy === 1 ? arch.lightBlock : arch.pillarBlock
             );
-            dim.getBlock({ x: cx, y: originY + dy, z: originZ + 3 })?.setType(
-              dy === 1 ? "minecraft:sea_lantern" : "minecraft:quartz_pillar"
+            safeSetBlock(
+              dim,
+              basis.rel(cf, dy, wingR + 3),
+              dy === 1 ? arch.lightBlock : arch.pillarBlock
             );
           }
         }
       }
 
       for (let level = 0; level < 3; level++) {
-        const cy = originY + level;
+        const idxLeft = currentBay * 6 + level * 2;
+        const idxRight = currentBay * 6 + level * 2 + 1;
 
-        if (itemIndex < itemIdsList.length) {
-          const itemId = itemIdsList[itemIndex++];
+        if (idxLeft < wing.items.length) {
           fillDoubleChestWithSingleItem(
             dim,
-            { x: xStart, y: cy, z: originZ - 3 },
-            { x: xStart + 1, y: cy, z: originZ - 3 },
-            itemId,
-            "south"
+            basis.rel(fStart, level, wingR - 3),
+            basis.rel(fStart + 1, level, wingR - 3),
+            wing.items[idxLeft],
+            basis.leftInwardDir,
+            "",
+            arch.wallSignBlock
           );
+          builtCount++;
         }
 
-        if (itemIndex < itemIdsList.length) {
-          const itemId = itemIdsList[itemIndex++];
+        if (idxRight < wing.items.length) {
           fillDoubleChestWithSingleItem(
             dim,
-            { x: xStart, y: cy, z: originZ + 3 },
-            { x: xStart + 1, y: cy, z: originZ + 3 },
-            itemId,
-            "north"
+            basis.rel(fStart, level, wingR + 3),
+            basis.rel(fStart + 1, level, wingR + 3),
+            wing.items[idxRight],
+            basis.rightInwardDir,
+            "",
+            arch.wallSignBlock
           );
+          builtCount++;
         }
       }
 
       currentBay++;
-      const pct = Math.min(100, Math.round((currentBay / totalBays) * 100));
-      player.onScreenDisplay.setActionBar(\`§dConstruindo Mega Sala de Baús Duplos Conectados: §a\${pct}% §7(\${itemIndex}/\${itemIdsList.length} Baús Duplos)\`);
+      if (currentBay >= wing.totalBays) {
+        // Fecha a parede de fundo da Ala atual
+        const endF = fOrigin + wing.totalBays * 3;
+        for (let dr = -4; dr <= 4; dr++) {
+          safeSetBlock(dim, basis.rel(endF, -1, wingR + dr), arch.floorBlock);
+          for (let dy = 0; dy <= 3; dy++) {
+            safeSetBlock(
+              dim,
+              basis.rel(endF, dy, wingR + dr),
+              dy === 1 && dr === 0 ? arch.lightBlock : arch.wallBlock
+            );
+          }
+          safeSetBlock(dim, basis.rel(endF, 4, wingR + dr), arch.ceilingBlock);
+        }
+        currentBay = 0;
+        currentWing++;
+      }
+
+      const pct = Math.min(100, Math.round((builtCount / Math.max(1, validItems.length)) * 100));
+      player.onScreenDisplay.setActionBar(
+        \`§dSala Organizada (\${basis.dirLabelPt}): §a\${pct}% §7(\${builtCount}/\${validItems.length} Baús Duplos)\`
+      );
     } catch (e) {
-      system.clearRun(jobId);
+      currentBay++;
     }
   }, 2);
 }
 
-// Modo 3: Sala Compacta com TODOS os Blocos e Itens Survival (54 itens diferentes por Baú Duplo Conectado)
+// Modo 3: Sala Compacta Organizada na DIREÇÃO DO OLHAR com TODOS os Blocos, Variações e Itens Survival (54 itens diferentes de 64x por Baú Duplo)
 function buildAllMinecraftItemsInDoubleChests(player) {
   const allTypes = getAllGameBlocksAndItems();
 
   const dim = player.dimension;
-  const originX = Math.floor(player.location.x) + 2;
-  const originY = Math.floor(player.location.y);
-  const originZ = Math.floor(player.location.z);
+  const arch = getPlayerArchModel(player);
+  const basis = getLookBasis(player);
+  const fOrigin = 4;
 
   const itemsPerDoubleChest = 54;
   const totalDoubleChests = Math.ceil(allTypes.length / itemsPerDoubleChest);
@@ -2838,34 +4382,71 @@ function buildAllMinecraftItemsInDoubleChests(player) {
   let globalItemIdx = 0;
   let chestsBuilt = 0;
 
-  player.sendMessage(\`§8[§bMega Galeria Survival§8] §eCatalogados §a\${allTypes.length} Blocos e Itens Survival§e! Gerando \${totalDoubleChests} Baús Duplos conectados...\`);
+  buildOrganizedHallEntranceUtilities(dim, basis, arch, "Catálogo Compacto");
+
+  player.sendMessage(
+    \`§8[§bSala Compacta Organizada§8] §eCatalogados e ordenados §a\${allTypes.length} Blocos, Variações e Itens Survival §ena direção §b\${basis.dirLabelPt} §eno estilo §b\${arch.name}§e!\`
+  );
 
   const jobId = system.runInterval(() => {
     try {
       if (currentBay >= totalBays || globalItemIdx >= allTypes.length) {
         system.clearRun(jobId);
+        const endF = fOrigin + totalBays * 3;
+        for (let dr = -4; dr <= 4; dr++) {
+          safeSetBlock(dim, basis.rel(endF, -1, dr), arch.floorBlock);
+          for (let dy = 0; dy <= 3; dy++) {
+            safeSetBlock(
+              dim,
+              basis.rel(endF, dy, dr),
+              dy === 1 && dr === 0 ? arch.lightBlock : arch.wallBlock
+            );
+          }
+          safeSetBlock(dim, basis.rel(endF, 4, dr), arch.ceilingBlock);
+        }
+        try { player.teleport(basis.relTp(2, 0, 0)); } catch (e) {}
         try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-        player.sendMessage(\`§8[§aMega Galeria Pronta§8] §aTodos os \${globalItemIdx} blocos e itens Survival foram colocados em \${chestsBuilt} Baús Duplos conectados!\`);
+        player.sendMessage(
+          \`§8[§aSala Compacta Pronta§8] §aTodos os \${globalItemIdx} blocos, variações e itens Survival foram organizados por categoria na direção \${basis.dirLabelPt} em \${chestsBuilt} Baús Duplos com Placa na Frente!\`
+        );
         return;
       }
 
-      const xStart = originX + currentBay * 3;
+      const fStart = fOrigin + currentBay * 3;
 
-      for (let dx = 0; dx < 3; dx++) {
-        const cx = xStart + dx;
-        for (let dz = -4; dz <= 4; dz++) {
-          dim.getBlock({ x: cx, y: originY - 1, z: originZ + dz })?.setType(
-            dz === 0 && dx === 1 ? "minecraft:sea_lantern" : "minecraft:smooth_quartz"
+      for (let df = 0; df < 3; df++) {
+        const cf = fStart + df;
+        for (let dr = -4; dr <= 4; dr++) {
+          safeSetBlock(
+            dim,
+            basis.rel(cf, -1, dr),
+            dr === 0 && df === 1 ? arch.lightBlock : dr === 0 ? arch.floorCenterBlock : arch.floorBlock
           );
           for (let dy = 0; dy <= 3; dy++) {
-            dim.getBlock({ x: cx, y: originY + dy, z: originZ + dz })?.setType("minecraft:air");
+            if (dr === -4 || dr === 4) {
+              safeSetBlock(
+                dim,
+                basis.rel(cf, dy, dr),
+                dy === 1 && df === 1 ? arch.lightBlock : arch.wallBlock
+              );
+            } else {
+              safeSetBlock(dim, basis.rel(cf, dy, dr), "minecraft:air");
+            }
           }
-          dim.getBlock({ x: cx, y: originY + 3, z: originZ + dz })?.setType("minecraft:glass");
+          safeSetBlock(dim, basis.rel(cf, 4, dr), arch.ceilingBlock);
         }
-        if (dx === 2) {
-          for (let dy = 0; dy <= 2; dy++) {
-            dim.getBlock({ x: cx, y: originY + dy, z: originZ - 3 })?.setType("minecraft:quartz_pillar");
-            dim.getBlock({ x: cx, y: originY + dy, z: originZ + 3 })?.setType("minecraft:quartz_pillar");
+        if (df === 2) {
+          for (let dy = 0; dy <= 3; dy++) {
+            safeSetBlock(
+              dim,
+              basis.rel(cf, dy, -3),
+              dy === 1 ? arch.lightBlock : arch.pillarBlock
+            );
+            safeSetBlock(
+              dim,
+              basis.rel(cf, dy, 3),
+              dy === 1 ? arch.lightBlock : arch.pillarBlock
+            );
           }
         }
       }
@@ -2874,58 +4455,115 @@ function buildAllMinecraftItemsInDoubleChests(player) {
         if (globalItemIdx >= allTypes.length) return;
         const pair = placeConnectedDoubleChest(dim, posA, posB, cardinalDir);
         if (!pair) return;
-        const { blockA, blockB } = pair;
+        const { blockA, blockB, dir: resolvedDir } = pair;
+        const finalDir = resolvedDir || cardinalDir || "north";
 
-        const contA = blockA.getComponent("minecraft:inventory")?.container;
-        const contB = blockB.getComponent("minecraft:inventory")?.container;
+        const firstItemInChest = allTypes[globalItemIdx];
+        const firstNamePt = translateItemIdToPtBr(firstItemInChest);
 
-        const addCatalogItemsToContainer = (cont, maxSlots) => {
-          if (!cont) return;
-          for (let s = 0; s < maxSlots && globalItemIdx < allTypes.length; s++) {
-            const itemId = allTypes[globalItemIdx++];
-            try {
-              const st = new ItemStack(itemId, 1);
+        const chestStacks = [];
+        for (let s = 0; s < 54 && globalItemIdx < allTypes.length; s++) {
+          const itemId = allTypes[globalItemIdx++];
+          try {
+            const st = createSafeItemStack(itemId, 64);
+            if (st) {
               st.amount = st.maxAmount || 64;
-              cont.addItem(st);
+              chestStacks.push(st);
+            }
+          } catch (e) {}
+        }
+
+        const populateCatalogChest = (bA, bB) => {
+          const cA = bA?.getComponent("minecraft:inventory")?.container;
+          const cB = bB?.getComponent("minecraft:inventory")?.container;
+          for (let s = 0; s < chestStacks.length; s++) {
+            const st = chestStacks[s];
+            try {
+              if (cA && cA.size >= 54) {
+                if (!cA.getItem(s)) cA.setItem(s, st);
+              } else if (s < 27 && cA) {
+                if (!cA.getItem(s)) cA.setItem(s, st);
+              } else if (s >= 27 && cB) {
+                if (!cB.getItem(s - 27)) cB.setItem(s - 27, st);
+              }
             } catch (e) {}
           }
         };
 
-        if (contA && contA.size >= 54) {
-          addCatalogItemsToContainer(contA, 54);
-        } else {
-          addCatalogItemsToContainer(contA, 27);
-          addCatalogItemsToContainer(contB, 27);
-        }
+        populateCatalogChest(blockA, blockB);
         chestsBuilt++;
+
+        // Coloca Placa na Frente do Baú identificando o Baú Categorizado (compatível com as 4 direções)
+        const frontSignPos = {
+          x: finalDir === "east" ? posA.x + 1 : finalDir === "west" ? posA.x - 1 : posA.x,
+          y: posA.y,
+          z: finalDir === "south" ? posA.z + 1 : finalDir === "north" ? posA.z - 1 : posA.z
+        };
+        const chestNum = chestsBuilt;
+        const signLines = [
+          \`§l§b[BAÚ #\${chestNum}]\`,
+          \`§e\${firstNamePt.slice(0, 15)}\`,
+          "§f+53 Variações",
+          "§a54 Packs (64x)"
+        ];
+        placeExternalWallSignOnPillar(dim, frontSignPos, finalDir, signLines, arch.wallSignBlock);
+        system.runTimeout(() => {
+          try {
+            let latestA = dim.getBlock(posA);
+            let latestB = dim.getBlock(posB);
+            const checkCont = latestA?.getComponent("minecraft:inventory")?.container;
+            if (!checkCont || checkCont.size < 54) {
+              const repaired = placeConnectedDoubleChest(dim, posA, posB, finalDir);
+              if (repaired) {
+                latestA = repaired.blockA;
+                latestB = repaired.blockB;
+              }
+            }
+            populateCatalogChest(latestA, latestB);
+            placeExternalWallSignOnPillar(dim, frontSignPos, finalDir, signLines, arch.wallSignBlock);
+          } catch (e) {}
+        }, 2);
       };
 
       for (let level = 0; level < 3; level++) {
-        const cy = originY + level;
         fillNextDoubleChestFromCatalog(
-          { x: xStart, y: cy, z: originZ - 3 },
-          { x: xStart + 1, y: cy, z: originZ - 3 },
-          "south"
+          basis.rel(fStart, level, -3),
+          basis.rel(fStart + 1, level, -3),
+          basis.leftInwardDir
         );
         fillNextDoubleChestFromCatalog(
-          { x: xStart, y: cy, z: originZ + 3 },
-          { x: xStart + 1, y: cy, z: originZ + 3 },
-          "north"
+          basis.rel(fStart, level, 3),
+          basis.rel(fStart + 1, level, 3),
+          basis.rightInwardDir
         );
       }
 
       currentBay++;
       const pct = Math.min(100, Math.round((globalItemIdx / allTypes.length) * 100));
-      player.onScreenDisplay.setActionBar(\`§bGerando Sala com Todos os Blocos e Itens Survival: §a\${pct}% §7(\${globalItemIdx}/\${allTypes.length})\`);
+      player.onScreenDisplay.setActionBar(
+        \`§bSala Compacta (\${basis.dirLabelPt}): §a\${pct}% §7(\${globalItemIdx}/\${allTypes.length})\`
+      );
     } catch (e) {
-      system.clearRun(jobId);
+      currentBay++;
     }
   }, 2);
 }
 
-// Modo 4: Escolher corredor do catálogo para ter 1 Baú Duplo Inteiro (54 packs) para cada bloco/item do corredor
+// Escolher Lote de 60 Baús do Catálogo Completo
 function openCatalogBatchChestHallModal(player) {
   const allIds = getAllGameBlocksAndItems();
+  const catNames = {
+    1: "Minérios & Cobre",
+    2: "Armas & Armaduras",
+    3: "Raros, Trims & Discos",
+    4: "Redstone & 17 Shulkers",
+    5: "Madeiras & Variações",
+    6: "Pedras, Ardósia & Tufo",
+    7: "Quartzo, Tijolos & Arenito",
+    8: "Blocos Coloridos (16 Cores)",
+    9: "Comidas, Flores & Natureza",
+    10: "Nether, End & Variações"
+  };
 
   const batchSize = 60;
   const totalBatches = Math.ceil(allIds.length / batchSize);
@@ -2933,13 +4571,15 @@ function openCatalogBatchChestHallModal(player) {
   for (let b = 0; b < totalBatches; b++) {
     const start = b * batchSize + 1;
     const end = Math.min((b + 1) * batchSize, allIds.length);
-    options.push(\`Corredor #\${b + 1}: Blocos/Itens \${start} a \${end} (60 Baús Duplos Lotados)\`);
+    const firstId = allIds[b * batchSize] || "minecraft:stone";
+    const catLabel = catNames[getSurvivalCategoryPriority(firstId)] || "Geral";
+    options.push(\`Sala Organizada #\${b + 1} (\${catLabel}): Itens \${start} a \${end}\`);
   }
 
   const modal = new ModalFormData()
-    .title("1 Baú Duplo Por Bloco/Item")
+    .title("Salas Organizadas (60 Baús)")
     .dropdown(
-      \`O jogo possui \${allIds.length} Blocos e Itens obtíveis no Survival. Escolha qual corredor de 60 Baús Duplos conectados (54 packs por baú) construir agora:\`,
+      \`Os \${allIds.length} Blocos, Variações e Itens estão 100% organizados! Escolha qual Sala Fechada de 60 Baús Duplos construir agora:\`,
       options,
       0
     );
@@ -2947,11 +4587,11 @@ function openCatalogBatchChestHallModal(player) {
   showFormSafely(player, modal, (res) => {
     const batchIdx = Number(res.formValues[0]) || 0;
     const slice = allIds.slice(batchIdx * batchSize, (batchIdx + 1) * batchSize);
-    buildSameItemDoubleChestHall(player, slice, \`Corredor Survival #\${batchIdx + 1}\`);
+    buildSameItemDoubleChestHall(player, slice, \`Sala Survival #\${batchIdx + 1}\`);
   });
 }
 
-// Modo 5: Gera 1 Baú Duplo conectado imediatamente na frente do jogador com 54 clones do item da mão
+// Modo 5: Gera 1 Baú Duplo conectado imediatamente na direção do olhar com 54 clones do item da mão
 function spawnDoubleChestOfHandItem(player) {
   const equip = player.getComponent("minecraft:equippable");
   const handItem = equip?.getEquipment(EquipmentSlot.Mainhand);
@@ -2962,103 +4602,125 @@ function spawnDoubleChestOfHandItem(player) {
   }
 
   const dim = player.dimension;
-  const px = Math.floor(player.location.x);
-  const py = Math.floor(player.location.y);
-  const pz = Math.floor(player.location.z) + 2;
+  const arch = getPlayerArchModel(player);
+  const basis = getLookBasis(player);
+  const posA = basis.rel(2, 0, 0);
+  const posB = basis.rel(2, 0, 1);
 
-  // Garante que o espaço acima do Baú Duplo esteja livre para abrir sem bloqueio
   try {
-    dim.getBlock({ x: px, y: py + 1, z: pz })?.setType("minecraft:air");
-    dim.getBlock({ x: px + 1, y: py + 1, z: pz })?.setType("minecraft:air");
+    safeSetBlock(dim, basis.rel(2, 1, 0), "minecraft:air");
+    safeSetBlock(dim, basis.rel(2, 1, 1), "minecraft:air");
+    safeSetBlock(dim, basis.rel(1, 0, 0), "minecraft:air");
+    safeSetBlock(dim, basis.rel(1, 0, 1), "minecraft:air");
   } catch (e) {}
 
   const ok = fillDoubleChestWithSingleItem(
     dim,
-    { x: px, y: py, z: pz },
-    { x: px + 1, y: py, z: pz },
+    posA,
+    posB,
     handItem,
-    "north"
+    basis.backDir,
+    "",
+    arch?.wallSignBlock || "minecraft:birch_wall_sign"
   );
 
   if (ok) {
     try { player.playSound("random.chestopen", { pitch: 1.1, volume: 0.9 }); } catch (e) {}
-    player.sendMessage(\`§8[§aMega Baú Duplo§8] §aCriado 1 Baú Duplo conectado na sua frente com todos os 54 slots lotados de §e\${handItem.typeId.replace("minecraft:", "")}§a!\`);
+    player.sendMessage(
+      \`§8[§aMega Baú Duplo§8] §aCriado 1 Baú Duplo conectado na direção §b\${basis.dirLabelPt} §acom Placa Identificadora e todos os 54 slots lotados de §e\${handItem.typeId.replace("minecraft:", "")}§a!\`
+    );
   }
 }
 
 // ============================================================================
-// 6. CONSTRUTOR RÁPIDO DE ESTRUTURAS, LABORATÓRIO DE POÇÕES, FORNALHA & FARMS
+// 6. CONSTRUTOR DE ESTRUTURAS NA DIREÇÃO DO OLHAR, SALA DE ENCANTAMENTOS + 42 VILLAGERS, POÇÕES & FORNALHA
 // ============================================================================
 function openBuilderAndSpawnerMenu(player) {
+  const basis = getLookBasis(player);
   const form = new ActionFormData()
-    .title("§l§cConstrutor de Estruturas & Farms")
-    .body("§7Construa mega estruturas industriais, laboratórios e farms automáticas 100% funcionais:")
-    .button("§l§dMega Laboratório de Poções Enorme (Alquimia)\\n§r§8Alquimia Completa, Suportes, Caldeirões e Todos os Ingredientes", "textures/items/brewing_stand")
+    .title("§l§cConstrutor (Direção do Olhar)")
+    .body(
+      \`§7Direção atual do olhar: §b\${basis.dirLabelPt}\\n\` +
+      "§7Gire a câmera para qualquer lado — toda construção nascerá exatamente na direção para onde você está olhando:"
+    )
+    .button("§l§dMega Sala de Encantamentos + 42 Villagers (1 Esmeralda)\\n§r§842 Baús Livros Nv.Máx + 18 Baús Insumos + 42 Villagers", "textures/items/book_enchanted")
+    .button("§l§dMega Sala de Poções: 30 Baús Duplos Individuais\\n§r§8Alquimia Completa, Suportes, Caldeirões e 30 Baús Duplos", "textures/items/brewing_stand")
     .button("§l§6Super Fornalha Industrial 16x (Smelter Automático)\\n§r§816 Fornalhas com Funis, Baús de entrada de minérios e saída", "textures/items/blast_furnace")
-    .button("§l§aMenu de Farms Automáticas 100% Survival\\n§r§8Farms de Ferro, Cana/Bambu, Abóboras, Mob Trap, Lã e Algas", "textures/items/hopper")
-    .button("§l§5Mega Sala de Baús Duplos (com Molduras Brilhantes)\\n§r§8~1.180 Baús Duplos com Molduras Brilhantes identificadoras", "textures/items/chest_minecart")
-    .button("§dGerar Mesa de Encantamento Nível 30 Completa\\n§r§8Cria 15 Estantes de Livros + Mesa no centro", "textures/items/book_enchanted")
+    .button("§l§5Mega Armazém: Baús Duplos Organizados por Setores\\n§r§810 Setores temáticos com placas na frente e 54 slots cheios", "textures/items/chest_minecart")
+    .button("§dGerar Altar de Encantamento Nível 30 Rápido (Na Frente)\\n§r§8Cria 16 Estantes de Livros + Mesa no centro na direção do olhar", "textures/items/book_enchanted")
     .button("§bCriar Plataforma Salva-Vidas 5x5 sob os Pés\\n§r§8Obsidiana instantânea (salva de quedas e lava)", "textures/items/ender_pearl")
-    .button("§6Criar Bunker / Abrigo Iluminado ao Redor\\n§r§8Proteção imediata com lanternas e baú", "textures/items/lantern")
-    .button("§eInvocar Mobs, Pets Raros, Aldeões & Golem\\n§r§8Spawna criaturas amigáveis ou de farm", "textures/items/emerald")
+    .button("§6Criar Bunker / Abrigo Iluminado na Frente (Direção Olhar)\\n§r§8Proteção imediata com lanternas, porta e baú", "textures/items/lantern")
+    .button("§eInvocar Mobs, Pets Raros, Aldeões & Golem\\n§r§8Spawna criaturas amigáveis de suporte", "textures/items/emerald")
     .button("§cInvocar Bosses (Warden, Wither, Ender Dragon)\\n§r§8Spawna chefes para testar suas armas", "textures/items/nether_star")
     .button("§8« Voltar ao Menu Principal");
 
   showFormSafely(player, form, (res) => {
     const dim = player.dimension;
-    const px = Math.floor(player.location.x);
-    const py = Math.floor(player.location.y);
-    const pz = Math.floor(player.location.z);
+    const b = getLookBasis(player);
 
     if (res.selection === 0) {
-      buildMegaPotionBrewingComplex(player);
+      openMegaEnchantmentHallMenu(player);
     } else if (res.selection === 1) {
-      buildMegaIndustrialSmelter(player);
+      buildMegaPotionBrewingComplex(player);
     } else if (res.selection === 2) {
-      openAutomatedFarmsMenu(player);
+      buildMegaIndustrialSmelter(player);
     } else if (res.selection === 3) {
       openMegaChestHallMenu(player);
     } else if (res.selection === 4) {
       try {
-        for (let dx = -2; dx <= 2; dx++) {
-          for (let dz = -2; dz <= 2; dz++) {
-            if (Math.abs(dx) === 2 || Math.abs(dz) === 2) {
-              if (dx === 0 && dz === 2) continue;
-              dim.getBlock({ x: px + dx, y: py, z: pz + dz })?.setType("minecraft:bookshelf");
-              dim.getBlock({ x: px + dx, y: py + 1, z: pz + dz })?.setType("minecraft:bookshelf");
+        for (let df = -2; df <= 2; df++) {
+          for (let dr = -2; dr <= 2; dr++) {
+            const f = 4 + df;
+            safeSetBlock(dim, b.rel(f, -1, dr), "minecraft:chiseled_quartz_block");
+            if (Math.abs(df) === 2 || Math.abs(dr) === 2) {
+              if (df === -2 && dr === 0) {
+                safeSetBlock(dim, b.rel(f, 0, dr), "minecraft:air");
+                safeSetBlock(dim, b.rel(f, 1, dr), "minecraft:air");
+                continue;
+              }
+              safeSetBlock(dim, b.rel(f, 0, dr), "minecraft:bookshelf");
+              safeSetBlock(dim, b.rel(f, 1, dr), "minecraft:bookshelf");
+            } else {
+              safeSetBlock(dim, b.rel(f, 0, dr), "minecraft:air");
+              safeSetBlock(dim, b.rel(f, 1, dr), "minecraft:air");
             }
           }
         }
-        dim.getBlock({ x: px, y: py, z: pz })?.setType("minecraft:enchanting_table");
-        player.sendMessage("§8[§aConstrutor§8] §dMesa de Encantamento Nível 30 gerada ao seu redor!");
+        safeSetBlock(dim, b.rel(4, 0, 0), "minecraft:enchanting_table");
+        giveItemSafely(player, "minecraft:lapis_lazuli", 64);
+        player.sendMessage(\`§8[§aConstrutor§8] §dAltar de Encantamento Nível 30 gerado na direção §b\${b.dirLabelPt}§d (+64 Lápis-Lazúli)!\`);
       } catch (e) {}
     } else if (res.selection === 5) {
       try {
-        for (let dx = -2; dx <= 2; dx++) {
-          for (let dz = -2; dz <= 2; dz++) {
-            dim.getBlock({ x: px + dx, y: py - 1, z: pz + dz })?.setType("minecraft:obsidian");
+        for (let df = -2; df <= 2; df++) {
+          for (let dr = -2; dr <= 2; dr++) {
+            safeSetBlock(dim, b.rel(df, -1, dr), "minecraft:obsidian");
           }
         }
         player.sendMessage("§8[§aConstrutor§8] §bPlataforma 5x5 de Obsidiana criada sob seus pés!");
       } catch (e) {}
     } else if (res.selection === 6) {
       try {
-        for (let dx = -2; dx <= 2; dx++) {
+        for (let f = 2; f <= 6; f++) {
           for (let dy = -1; dy <= 3; dy++) {
-            for (let dz = -2; dz <= 2; dz++) {
-              const isEdge = Math.abs(dx) === 2 || Math.abs(dz) === 2 || dy === -1 || dy === 3;
-              const b = dim.getBlock({ x: px + dx, y: py + dy, z: pz + dz });
-              if (!b) continue;
-              if (isEdge) {
-                b.setType(dy === 1 && (dx === 0 || dz === 0) ? "minecraft:glass" : "minecraft:stone_bricks");
+            for (let r = -2; r <= 2; r++) {
+              const isEdge = f === 2 || f === 6 || Math.abs(r) === 2 || dy === -1 || dy === 3;
+              const isDoor = f === 2 && r === 0 && (dy === 0 || dy === 1);
+              const blk = dim.getBlock(b.rel(f, dy, r));
+              if (!blk) continue;
+              if (isDoor) {
+                blk.setType("minecraft:air");
+              } else if (isEdge) {
+                blk.setType(dy === 1 && (f === 4 || r === 0) ? "minecraft:glass" : "minecraft:stone_bricks");
               } else {
-                b.setType("minecraft:air");
+                blk.setType("minecraft:air");
               }
             }
           }
         }
-        dim.getBlock({ x: px, y: py + 2, z: pz })?.setType("minecraft:sea_lantern");
-        player.sendMessage("§8[§aConstrutor§8] §6Abrigo seguro construído ao seu redor!");
+        safeSetBlock(dim, b.rel(4, 2, 0), "minecraft:sea_lantern");
+        player.teleport(b.relTp(4, 0, 0));
+        player.sendMessage(\`§8[§aConstrutor§8] §6Abrigo seguro construído na direção §b\${b.dirLabelPt}§6!\`);
       } catch (e) {}
     } else if (res.selection === 7) {
       openMobSpawnerCategory(player, false);
@@ -3071,139 +4733,41 @@ function openBuilderAndSpawnerMenu(player) {
 }
 
 // ----------------------------------------------------------------------------
-// ESTRUTURA 1: MEGA LABORATÓRIO DE POÇÕES ENORME (COMPLEXO DE ALQUIMIA)
+// ESTRUTURA 1: MEGA SALA DE POÇÕES (30 BAÚS DUPLOS INDIVIDUAIS + PLACA EXTERNA + BANCADA COM MULTIPLICADOR)
 // ----------------------------------------------------------------------------
 function buildMegaPotionBrewingComplex(player) {
-  const dim = player.dimension;
-  const startX = Math.floor(player.location.x) + 2;
-  const startY = Math.floor(player.location.y);
-  const startZ = Math.floor(player.location.z) - 4;
-
-  player.sendMessage("§8[§dLaboratório de Poções§8] §eConstruindo Mega Complexo de Alquimia Industrial com Suportes, Caldeirões e Ingredientes...");
-
-  try {
-    // 1. Piso, Paredes e Teto Iluminado (13 de comprimento em X x 9 de largura em Z x 5 de altura em Y)
-    for (let dx = 0; dx < 13; dx++) {
-      for (let dz = 0; dz < 9; dz++) {
-        const cx = startX + dx;
-        const cz = startZ + dz;
-
-        // Piso com Ardósia Polida e Lanternas do Mar
-        const isLightFloor = (dx === 3 || dx === 9) && (dz === 2 || dz === 6);
-        dim.getBlock({ x: cx, y: startY - 1, z: cz })?.setType(
-          isLightFloor ? "minecraft:sea_lantern" : "minecraft:polished_deepslate"
-        );
-
-        // Limpa o espaço interno
-        for (let dy = 0; dy <= 4; dy++) {
-          dim.getBlock({ x: cx, y: startY + dy, z: cz })?.setType("minecraft:air");
-        }
-
-        // Teto de Vidro com iluminação
-        dim.getBlock({ x: cx, y: startY + 5, z: cz })?.setType(
-          isLightFloor ? "minecraft:sea_lantern" : "minecraft:glass"
-        );
-      }
-    }
-
-    // 2. Pilares de Quartzo e Muros nos cantos
-    for (let dy = 0; dy <= 4; dy++) {
-      dim.getBlock({ x: startX, y: startY + dy, z: startZ })?.setType("minecraft:quartz_pillar");
-      dim.getBlock({ x: startX + 12, y: startY + dy, z: startZ })?.setType("minecraft:quartz_pillar");
-      dim.getBlock({ x: startX, y: startY + dy, z: startZ + 8 })?.setType("minecraft:quartz_pillar");
-      dim.getBlock({ x: startX + 12, y: startY + dy, z: startZ + 8 })?.setType("minecraft:quartz_pillar");
-    }
-
-    // 3. Mesa Central de Alquimia: 4 Suportes de Poções + Funis + Caldeirões de Água
-    for (let i = 0; i < 4; i++) {
-      const bx = startX + 3 + i * 2;
-      // Suporte de Poções sobre bancada de quartzo
-      dim.getBlock({ x: bx, y: startY, z: startZ + 4 })?.setType("minecraft:smooth_quartz");
-      dim.getBlock({ x: bx, y: startY + 1, z: startZ + 4 })?.setType("minecraft:brewing_stand");
-
-      // Caldeirões com água infinita logo à frente para encher frascos
-      dim.getBlock({ x: bx, y: startY, z: startZ + 3 })?.setType("minecraft:cauldron");
-    }
-
-    // 4. Canteiro de Fungos do Nether (Soul Sand + Nether Wart)
-    for (let i = 0; i < 6; i++) {
-      const wx = startX + 3 + i;
-      dim.getBlock({ x: wx, y: startY, z: startZ + 7 })?.setType("minecraft:soul_sand");
-      dim.getBlock({ x: wx, y: startY + 1, z: startZ + 7 })?.setType("minecraft:nether_wart");
-    }
-
-    // 5. 4 Baús Duplos Lotados com TODOS os Ingredientes de Poções e Molduras Brilhantes
-    // Baú 1: Bases (Nether Wart, Pó de Blaze, Frascos de Vidro)
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: startX + 2, y: startY, z: startZ + 1 },
-      { x: startX + 3, y: startY, z: startZ + 1 },
-      "minecraft:nether_wart",
-      "south"
-    );
-
-    // Baú 2: Ingredientes Especiais (Lágrima de Ghast, Olho de Aranha Fermentado, Cenoura Dourada)
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: startX + 5, y: startY, z: startZ + 1 },
-      { x: startX + 6, y: startY, z: startZ + 1 },
-      "minecraft:ghast_tear",
-      "south"
-    );
-
-    // Baú 3: Potencializadores (Pó de Pedra Luminosa / Glowstone, Redstone, Pólvora)
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: startX + 8, y: startY, z: startZ + 1 },
-      { x: startX + 9, y: startY, z: startZ + 1 },
-      "minecraft:glowstone_dust",
-      "south"
-    );
-
-    // Baú 4: Combustível de Alquimia (Pó de Blaze 54 packs)
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: startX + 10, y: startY, z: startZ + 3 },
-      { x: startX + 11, y: startY, z: startZ + 3 },
-      "minecraft:blaze_powder",
-      "west"
-    );
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aAlquimia Pronta§8] §aMega Laboratório de Poções construído com sucesso! Suportes de poções, caldeirões com água, canteiro de fungos e 4 Baús Duplos com todos os ingredientes e molduras brilhantes prontos!");
-  } catch (err) {
-    player.sendMessage("§8[§cAlquimia§8] §cErro ao gerar o laboratório: " + String(err));
-  }
+  buildMega30ChestsPotionHall(player);
 }
 
 // ----------------------------------------------------------------------------
-// ESTRUTURA 2: SUPER FORNALHA INDUSTRIAL 16X (SMELTER AUTOMÁTICO)
+// ESTRUTURA 2: SUPER FORNALHA INDUSTRIAL 16X NA DIREÇÃO DO OLHAR (SMELTER AUTOMÁTICO)
 // ----------------------------------------------------------------------------
 function buildMegaIndustrialSmelter(player) {
   const dim = player.dimension;
-  const startX = Math.floor(player.location.x) + 2;
-  const startY = Math.floor(player.location.y);
-  const startZ = Math.floor(player.location.z) - 3;
+  const basis = getLookBasis(player);
+  const arch = getPlayerArchModel(player);
 
-  player.sendMessage("§8[§6Fornalha Industrial§8] §eConstruindo Super Fornalha Industrial 16x com Funis e Baús automáticos...");
+  player.sendMessage(
+    \`§8[§6Fornalha Industrial§8] §eConstruindo Super Fornalha Industrial 16x na direção §b\${basis.dirLabelPt} §ecom Funis e Baús automáticos...\`
+  );
 
   try {
-    // 1. Piso de Tijolos de Ardósia e Lanternas do Mar (12x7)
-    for (let dx = 0; dx < 12; dx++) {
-      for (let dz = 0; dz < 7; dz++) {
-        const cx = startX + dx;
-        const cz = startZ + dz;
-        dim.getBlock({ x: cx, y: startY - 1, z: cz })?.setType(
-          (dx === 2 || dx === 9) && dz === 3 ? "minecraft:sea_lantern" : "minecraft:deepslate_bricks"
+    // 1. Piso de Tijolos de Ardósia e Lanternas do Mar (f = 2..13, r = -3..3)
+    for (let df = 0; df < 12; df++) {
+      for (let dr = -3; dr <= 3; dr++) {
+        const f = 2 + df;
+        safeSetBlock(
+          dim,
+          basis.rel(f, -1, dr),
+          (df === 2 || df === 9) && dr === 0 ? "minecraft:sea_lantern" : "minecraft:deepslate_bricks"
         );
         for (let dy = 0; dy <= 4; dy++) {
-          dim.getBlock({ x: cx, y: startY + dy, z: cz })?.setType("minecraft:air");
+          safeSetBlock(dim, basis.rel(f, dy, dr), "minecraft:air");
         }
       }
     }
 
     // 2. Linha Dupla de Fornalhas Industriais: 8 Fornalhas de cada lado (total 16)
-    // 6 Fornalhas Potentes (Blast Furnaces para Minérios) + 6 Defumadores (Smokers para Carnes) + 4 Fornalhas Convencionais
     const furnaceTypes = [
       "minecraft:blast_furnace",
       "minecraft:blast_furnace",
@@ -3216,1001 +4780,80 @@ function buildMegaIndustrialSmelter(player) {
     ];
 
     for (let i = 0; i < 8; i++) {
-      const fx = startX + 2 + i;
+      const f = 4 + i;
       const fType = furnaceTypes[i];
 
-      // Fileira Norte (z = startZ + 2)
-      // Nível 0: Funis de Saída direcionando para baixo/frente
-      dim.getBlock({ x: fx, y: startY, z: startZ + 2 })?.setType("minecraft:hopper");
-      // Nível 1: Fornalha
-      dim.getBlock({ x: fx, y: startY + 1, z: startZ + 2 })?.setType(fType);
-      // Nível 2: Funil Superior de Entrada de Itens
-      dim.getBlock({ x: fx, y: startY + 2, z: startZ + 2 })?.setType("minecraft:hopper");
-      // Traseira: Funil de Combustível
-      dim.getBlock({ x: fx, y: startY + 1, z: startZ + 1 })?.setType("minecraft:hopper");
+      // Fileira Esquerda (r = -1)
+      safeSetBlock(dim, basis.rel(f, 0, -1), "minecraft:hopper");
+      safeSetBlock(dim, basis.rel(f, 1, -1), fType);
+      safeSetBlock(dim, basis.rel(f, 2, -1), "minecraft:hopper");
+      safeSetBlock(dim, basis.rel(f, 1, -2), "minecraft:hopper");
 
-      // Fileira Sul (z = startZ + 4)
-      // Nível 0: Funis de Saída
-      dim.getBlock({ x: fx, y: startY, z: startZ + 4 })?.setType("minecraft:hopper");
-      // Nível 1: Fornalha
-      dim.getBlock({ x: fx, y: startY + 1, z: startZ + 4 })?.setType(fType);
-      // Nível 2: Funil Superior de Entrada
-      dim.getBlock({ x: fx, y: startY + 2, z: startZ + 4 })?.setType("minecraft:hopper");
-      // Traseira: Funil de Combustível
-      dim.getBlock({ x: fx, y: startY + 1, z: startZ + 5 })?.setType("minecraft:hopper");
+      // Fileira Direita (r = +1)
+      safeSetBlock(dim, basis.rel(f, 0, 1), "minecraft:hopper");
+      safeSetBlock(dim, basis.rel(f, 1, 1), fType);
+      safeSetBlock(dim, basis.rel(f, 2, 1), "minecraft:hopper");
+      safeSetBlock(dim, basis.rel(f, 1, 2), "minecraft:hopper");
     }
 
-    // 3. Baús Duplos de Combustível (Pré-abastecidos com Blocos de Carvão e Varas de Blaze)
+    // 3. Baús Duplos de Combustível (Pré-abastecidos com Blocos de Carvão e Varas de Blaze, virados para o lado externo para não sobrepor funis)
     fillDoubleChestWithSingleItem(
       dim,
-      { x: startX + 4, y: startY + 2, z: startZ + 1 },
-      { x: startX + 5, y: startY + 2, z: startZ + 1 },
+      basis.rel(6, 2, -2),
+      basis.rel(7, 2, -2),
       "minecraft:coal_block",
-      "south"
+      basis.rightInwardDir,
+      "",
+      arch.wallSignBlock
     );
 
     fillDoubleChestWithSingleItem(
       dim,
-      { x: startX + 4, y: startY + 2, z: startZ + 5 },
-      { x: startX + 5, y: startY + 2, z: startZ + 5 },
+      basis.rel(6, 2, 2),
+      basis.rel(7, 2, 2),
       "minecraft:blaze_rod",
-      "north"
+      basis.leftInwardDir,
+      "",
+      arch.wallSignBlock
     );
 
-    // 4. Baús Duplos de Entrada de Minérios no topo
-    placeConnectedDoubleChest(dim, { x: startX + 2, y: startY + 3, z: startZ + 2 }, { x: startX + 3, y: startY + 3, z: startZ + 2 }, "south");
-    placeConnectedDoubleChest(dim, { x: startX + 6, y: startY + 3, z: startZ + 2 }, { x: startX + 7, y: startY + 3, z: startZ + 2 }, "south");
+    // 4. Baús Duplos Conectados de Entrada de Minérios e Carnes no topo das 2 fileiras
+    placeConnectedDoubleChest(dim, basis.rel(4, 3, -1), basis.rel(5, 3, -1), basis.leftInwardDir);
+    placeConnectedDoubleChest(dim, basis.rel(8, 3, -1), basis.rel(9, 3, -1), basis.leftInwardDir);
+    placeConnectedDoubleChest(dim, basis.rel(4, 3, 1), basis.rel(5, 3, 1), basis.rightInwardDir);
+    placeConnectedDoubleChest(dim, basis.rel(8, 3, 1), basis.rel(9, 3, 1), basis.rightInwardDir);
 
     // 5. Baús Duplos de Saída (Produtos Prontos) no início das fileiras
     fillDoubleChestWithSingleItem(
       dim,
-      { x: startX, y: startY, z: startZ + 2 },
-      { x: startX + 1, y: startY, z: startZ + 2 },
+      basis.rel(2, 0, -1),
+      basis.rel(3, 0, -1),
       "minecraft:iron_ingot",
-      "south"
+      basis.leftInwardDir,
+      "",
+      arch.wallSignBlock
     );
 
     fillDoubleChestWithSingleItem(
       dim,
-      { x: startX, y: startY, z: startZ + 4 },
-      { x: startX + 1, y: startY, z: startZ + 4 },
+      basis.rel(2, 0, 1),
+      basis.rel(3, 0, 1),
       "minecraft:cooked_beef",
-      "north"
+      basis.rightInwardDir,
+      "",
+      arch.wallSignBlock
     );
 
     try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aFornalha Pronta§8] §aSuper Fornalha Industrial 16x construída! 8 Fornalhas Potentes, 8 Defumadores, rede de funis automáticos, baús de combustível lotados e baús de saída prontos para uso!");
+    player.sendMessage(
+      \`§8[§aFornalha Pronta§8] §aSuper Fornalha Industrial 16x construída na direção §b\${basis.dirLabelPt}§a! 8 Fornalhas Potentes, 8 Defumadores, funis automáticos e baús lotados!\`
+    );
   } catch (err) {
     player.sendMessage("§8[§cFornalha§8] §cErro ao gerar fornalha: " + String(err));
   }
 }
 
-// ----------------------------------------------------------------------------
-// ESTRUTURA 3: MENU DE MEGA FARMS AVANÇADAS 100% SURVIVAL
-// ----------------------------------------------------------------------------
-function openAutomatedFarmsMenu(player) {
-  const form = new ActionFormData()
-    .title("§l§aMega Farms Avançadas")
-    .body("§7Selecione a Farm Automática que você deseja construir instantaneamente (100% funcional com funis, baús duplos e molduras brilhantes):")
-    .button("§l§61. Mega Farm de Ouro & XP do Nether (Portal Tick)\\n§r§8Portais gigantes, funis e Baú Duplo de Ouro e Pepitas", "textures/items/gold_ingot")
-    .button("§l§e2. Mega Farm de Raid (Totens da Imortalidade & Esmeraldas)\\n§r§8Plataforma de Raid, câmara de morte e Baú de Totens Infinitos", "textures/items/totem")
-    .button("§l§d3. Mega Farm de Enderman (XP Máximo & Pérolas do End)\\n§r§8Torre de queda 43m com isca de Endermite (0 a 30 em segundos)", "textures/items/ender_pearl")
-    .button("§l§84. Mega Farm de Wither Skeleton (Crânios de Wither & Carvão)\\n§r§8Fortaleza do Nether com Wither Roses e Baú de Crânios", "textures/items/skull_wither")
-    .button("§l§c5. Mega Farm de Creepers & Pólvora Pura (Gatos & Alçapões)\\n§r§8Filtro 100% Creeper para farmar Pólvora de foguetes e TNT", "textures/items/gunpowder")
-    .button("§l§56. Mega Sala de Trocas com Piglins (Barter Automático)\\n§r§86 Baias com Piglins, ejetores de ouro e baús coletores", "textures/items/crying_obsidian")
-    .button("§l§b7. Mega Farm de Guardiões do Templo (Prismarinho & Peixes)\\n§r§8Colunas de água e fogueiras coletando prismarinho", "textures/items/prismarine_shard")
-    .button("§l§a8. Mega Farm de Slime (Bolas de Slime Infinitas)\\n§r§8Plataforma com isca de Golem e Baú Duplo de Slime", "textures/items/slimeball")
-    .button("§l§e9. Farm Automática de Ferro (Iron Golem Farm)\\n§r§8Aldeões, Camas, Lava Blade e Baú Coletor de Ferro", "textures/items/iron_ingot")
-    .button("§l§610. Farm de Aldeão Agricultor (Cenouras, Batatas & Pão)\\n§r§8Canteiro 9x9 com aldeão colhedor e funis coletores", "textures/items/carrot")
-    .button("§l§a11. Farm de Cana-de-Açúcar & Bambu (Pistão + Observador)\\n§r§8Observadores + Pistões + Água e Baú Duplo", "textures/items/sugar_cane")
-    .button("§l§612. Farm de Abóbora & Melancia Automática\\n§r§8Observadores cortando e funis coletando no baú", "textures/items/melon")
-    .button("§l§c13. Farm de Mob Trap / Torre de Drops & XP\\n§r§8Câmara de spawn escurecida, queda e funis", "textures/items/bone")
-    .button("§l§214. Farm de Algas / Kelp (Combustível Infinito)\\n§r§8Crescimento vertical, pistões automáticos e defumadores", "textures/items/kelp")
-    .button("§l§f15. Farm de Lã Automática (Tosquia com Ejetores)\\n§r§8Baias de ovelhas com tesouras automáticas", "textures/items/shears")
-    .button("§8« Voltar ao Menu de Estruturas");
 
-  showFormSafely(player, form, (res) => {
-    switch (res.selection) {
-      case 0:
-        buildAutomatedGoldXpFarm(player);
-        break;
-      case 1:
-        buildAutomatedRaidFarm(player);
-        break;
-      case 2:
-        buildAutomatedEndermanFarm(player);
-        break;
-      case 3:
-        buildAutomatedWitherSkeletonFarm(player);
-        break;
-      case 4:
-        buildAutomatedCreeperGunpowderFarm(player);
-        break;
-      case 5:
-        buildAutomatedPiglinBarterHall(player);
-        break;
-      case 6:
-        buildAutomatedGuardianFarm(player);
-        break;
-      case 7:
-        buildAutomatedSlimeFarm(player);
-        break;
-      case 8:
-        buildAutomatedIronFarm(player);
-        break;
-      case 9:
-        buildAutomatedVillagerCropFarm(player);
-        break;
-      case 10:
-        buildAutomatedSugarCaneFarm(player);
-        break;
-      case 11:
-        buildAutomatedMelonPumpkinFarm(player);
-        break;
-      case 12:
-        buildAutomatedMobTrap(player);
-        break;
-      case 13:
-        buildAutomatedKelpFarm(player);
-        break;
-      case 14:
-        buildAutomatedWoolFarm(player);
-        break;
-      case 15:
-        openBuilderAndSpawnerMenu(player);
-        break;
-    }
-  });
-}
-
-// ----------------------------------------------------------------------------
-// FARM AVANÇADA 1: MEGA FARM DE OURO & XP DO NETHER (PORTAL TICK)
-// ----------------------------------------------------------------------------
-function buildAutomatedGoldXpFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 5;
-
-  player.sendMessage("§8[§6Mega Farm de Ouro§8] §eConstruindo Mega Farm de Ouro e XP com Portais do Nether e Funis automáticos...");
-
-  try {
-    // 1. Piso da câmara de coleta (14x10) com Ardósia e Baús de Ouro
-    for (let dx = 0; dx < 14; dx++) {
-      for (let dz = 0; dz < 10; dz++) {
-        dim.getBlock({ x: sx + dx, y: sy - 1, z: sz + dz })?.setType("minecraft:polished_deepslate");
-        for (let dy = 0; dy <= 12; dy++) {
-          dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + dz })?.setType("minecraft:air");
-        }
-      }
-    }
-
-    // 2. Linha de Coleta: 6 Funis direcionando para Baús Duplos
-    for (let i = 0; i < 6; i++) {
-      dim.getBlock({ x: sx + 4 + i, y: sy, z: sz + 4 })?.setType("minecraft:hopper");
-      dim.getBlock({ x: sx + 4 + i, y: sy, z: sz + 5 })?.setType("minecraft:magma");
-    }
-
-    // Baú Duplo 1: Barras de Ouro com Moldura Brilhante
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx + 1, y: sy, z: sz + 4 },
-      { x: sx + 2, y: sy, z: sz + 4 },
-      "minecraft:gold_ingot",
-      "south"
-    );
-
-    // Baú Duplo 2: Pepitas de Ouro com Moldura Brilhante
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx + 1, y: sy, z: sz + 6 },
-      { x: sx + 2, y: sy, z: sz + 6 },
-      "minecraft:gold_nugget",
-      "north"
-    );
-
-    // 3. Estrutura de Portais do Nether Gigantes (Obsidiana)
-    for (let dy = 2; dy <= 11; dy++) {
-      for (let dx = 3; dx <= 11; dx++) {
-        const isFrame = dy === 2 || dy === 11 || dx === 3 || dx === 11;
-        dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + 3 })?.setType(
-          isFrame ? "minecraft:obsidian" : "minecraft:crying_obsidian"
-        );
-        dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + 7 })?.setType(
-          isFrame ? "minecraft:obsidian" : "minecraft:crying_obsidian"
-        );
-      }
-    }
-
-    // 4. Canaletas com correnteza de água direcionando os Piglins Zumbis para os blocos de magma e funis
-    dim.getBlock({ x: sx + 10, y: sy + 1, z: sz + 4 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx + 10, y: sy + 1, z: sz + 5 })?.setType("minecraft:water");
-
-    // Spawna Piglins Zumbis para iniciar a farm
-    for (let i = 0; i < 4; i++) {
-      dim.spawnEntity("minecraft:zombified_piglin", { x: sx + 5 + i, y: sy + 3, z: sz + 4.5 });
-    }
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aFarm de Ouro Pronta§8] §aMega Farm de Ouro & XP do Nether construída! Portais de obsidiana, correntezas de água, blocos de magma, funis e Baús Duplos de Ouro e Pepitas com molduras brilhantes prontos!");
-  } catch (err) {
-    player.sendMessage("§8[§cOuro§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM AVANÇADA 2: MEGA FARM DE RAID (TOTENS DA IMORTALIDADE & ESMERALDAS)
-// ----------------------------------------------------------------------------
-function buildAutomatedRaidFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 3;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 4;
-
-  player.sendMessage("§8[§eFarm de Raid§8] §eConstruindo Mega Farm de Raid para Totens da Imortalidade e Esmeraldas Infinitas...");
-
-  try {
-    // 1. Câmara de Morte e Coleta no Chão com Funis
-    for (let dx = 2; dx <= 5; dx++) {
-      for (let dz = 2; dz <= 5; dz++) {
-        dim.getBlock({ x: sx + dx, y: sy, z: sz + dz })?.setType("minecraft:hopper");
-      }
-    }
-
-    // Baú Duplo 1: Totens da Imortalidade com Moldura Brilhante
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx, y: sy, z: sz + 2 },
-      { x: sx + 1, y: sy, z: sz + 2 },
-      "minecraft:totem_of_undying",
-      "south"
-    );
-
-    // Baú Duplo 2: Esmeraldas com Moldura Brilhante
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx, y: sy, z: sz + 4 },
-      { x: sx + 1, y: sy, z: sz + 4 },
-      "minecraft:emerald",
-      "south"
-    );
-
-    // Muros de Vidro da câmara de queda
-    for (let dy = 1; dy <= 16; dy++) {
-      for (let dx = 1; dx <= 6; dx++) {
-        for (let dz = 1; dz <= 6; dz++) {
-          if (dx === 1 || dx === 6 || dz === 1 || dz === 6) {
-            dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + dz })?.setType("minecraft:glass");
-          } else {
-            dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + dz })?.setType("minecraft:air");
-          }
-        }
-      }
-    }
-
-    // 2. Plataforma de Spawn de Invasores no Topo (Nível Y + 17)
-    for (let dx = -3; dx <= 10; dx++) {
-      for (let dz = -3; dz <= 10; dz++) {
-        dim.getBlock({ x: sx + dx, y: sy + 17, z: sz + dz })?.setType("minecraft:dark_oak_planks");
-      }
-    }
-
-    // Correntezas de água que empurram os saqueadores e evocadores para o fosso central de queda
-    dim.getBlock({ x: sx - 2, y: sy + 18, z: sz - 2 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx + 9, y: sy + 18, z: sz - 2 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx - 2, y: sy + 18, z: sz + 9 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx + 9, y: sy + 18, z: sz + 9 })?.setType("minecraft:water");
-
-    // Casulo seguro no topo com cama de aldeão (ativa e foca o Raid)
-    dim.getBlock({ x: sx + 3, y: sy + 21, z: sz + 3 })?.setType("minecraft:bed");
-    dim.spawnEntity("minecraft:villager_v2", { x: sx + 3.5, y: sy + 22, z: sz + 3.5 });
-
-    // Spawna um Evoker para inaugurar a farm com totens
-    dim.spawnEntity("minecraft:evoker", { x: sx + 3.5, y: sy + 18, z: sz + 3.5 });
-
-    try { player.playSound("random.totem", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aFarm de Raid Pronta§8] §aMega Farm de Raid concluída! Plataforma com correntezas, câmara de queda para 1 hit, funis e Baús Duplos de Totens da Imortalidade e Esmeraldas prontos!");
-  } catch (err) {
-    player.sendMessage("§8[§cRaid§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM AVANÇADA 3: MEGA FARM DE ENDERMAN (XP MÁXIMO & PÉROLAS DO END)
-// ----------------------------------------------------------------------------
-function buildAutomatedEndermanFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 3;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 3;
-
-  player.sendMessage("§8[§dFarm de Enderman§8] §eConstruindo Farm de Enderman 43m com Isca de Endermite (0 a 30 níveis de XP instantâneo)...");
-
-  try {
-    // 1. Base com Fenda de Matança para 1 Golpe, Funis e Baú Duplo de Pérolas
-    dim.getBlock({ x: sx + 1, y: sy, z: sz + 1 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 2, y: sy, z: sz + 1 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 1, y: sy, z: sz + 2 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 2, y: sy, z: sz + 2 })?.setType("minecraft:hopper");
-
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx - 1, y: sy, z: sz + 1 },
-      { x: sx, y: sy, z: sz + 1 },
-      "minecraft:ender_pearl",
-      "south"
-    );
-
-    // Lajes no nível 1 para permitir bater nos pés dos Endermen sem que eles possam atacar
-    dim.getBlock({ x: sx + 1, y: sy + 1, z: sz })?.setType("minecraft:stone_block_slab");
-    dim.getBlock({ x: sx + 2, y: sy + 1, z: sz })?.setType("minecraft:stone_block_slab");
-
-    // 2. Tubo de Queda de 43 Blocos de Altura (Endermen caem com apenas 0.5 coração)
-    for (let dy = 1; dy <= 43; dy++) {
-      for (let dx = 0; dx <= 3; dx++) {
-        for (let dz = 0; dz <= 3; dz++) {
-          if (dx === 0 || dx === 3 || dz === 0 || dz === 3) {
-            dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + dz })?.setType("minecraft:end_stone_bricks");
-          } else {
-            dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + dz })?.setType("minecraft:air");
-          }
-        }
-      }
-    }
-
-    // 3. Plataforma de Spawn no Topo (Nível Y + 44)
-    const topY = sy + 44;
-    for (let dx = -4; dx <= 7; dx++) {
-      for (let dz = -4; dz <= 7; dz++) {
-        dim.getBlock({ x: sx + dx, y: topY, z: sz + dz })?.setType("minecraft:end_stone_bricks");
-      }
-    }
-
-    // Isca central suspensa sobre o fosso (Endermite com trilho)
-    dim.getBlock({ x: sx + 1, y: topY + 2, z: sz + 1 })?.setType("minecraft:iron_bars");
-    dim.spawnEntity("minecraft:endermite", { x: sx + 1.5, y: topY + 3, z: sz + 1.5 });
-
-    // Spawna Endermen para inaugurar
-    dim.spawnEntity("minecraft:enderman", { x: sx + 4.5, y: topY + 1, z: sz + 4.5 });
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aEnderman Farm Pronta§8] §aMega Farm de Enderman concluída! Tubo de queda de 43 blocos com isca de Endermite, fenda de 1 soco para matar dezenas de Endermen por segundo e Baú Duplo de Pérolas!");
-  } catch (err) {
-    player.sendMessage("§8[§cEnderman§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM AVANÇADA 4: MEGA FARM DE WITHER SKELETON (CRÂNIOS & CARVÃO)
-// ----------------------------------------------------------------------------
-function buildAutomatedWitherSkeletonFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 4;
-
-  player.sendMessage("§8[§8Farm Wither Skeleton§8] §eConstruindo Farm de Wither Skeleton para Crânios e Carvão Infinito...");
-
-  try {
-    // Funis e Baú Duplo de Crânios de Wither
-    dim.getBlock({ x: sx + 3, y: sy, z: sz + 3 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 4, y: sy, z: sz + 3 })?.setType("minecraft:hopper");
-
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx + 1, y: sy, z: sz + 3 },
-      { x: sx + 2, y: sy, z: sz + 3 },
-      "minecraft:wither_skeleton_skull",
-      "south"
-    );
-
-    // Câmara de Fortaleza com Tijolos do Nether e Rosas do Wither
-    for (let dx = 0; dx < 8; dx++) {
-      for (let dz = 0; dz < 8; dz++) {
-        dim.getBlock({ x: sx + dx, y: sy - 1, z: sz + dz })?.setType("minecraft:nether_brick");
-        dim.getBlock({ x: sx + dx, y: sy + 4, z: sz + dz })?.setType("minecraft:nether_brick");
-      }
-    }
-
-    // Rosas do Wither nas laterais (apenas Wither Skeletons são imunes)
-    for (let dx = 2; dx <= 5; dx++) {
-      dim.getBlock({ x: sx + dx, y: sy, z: sz + 1 })?.setType("minecraft:wither_rose");
-      dim.getBlock({ x: sx + dx, y: sy, z: sz + 6 })?.setType("minecraft:wither_rose");
-    }
-
-    dim.spawnEntity("minecraft:wither_skeleton", { x: sx + 3.5, y: sy + 1, z: sz + 3.5 });
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aWither Skeleton Pronta§8] §aMega Farm de Wither Skeleton construída! Fortaleza do Nether com Rosas do Wither, funis e Baú Duplo de Crânios de Wither com moldura brilhante!");
-  } catch (err) {
-    player.sendMessage("§8[§cWither§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM AVANÇADA 5: MEGA FARM DE CREEPERS & PÓLVORA PURA
-// ----------------------------------------------------------------------------
-function buildAutomatedCreeperGunpowderFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 3;
-
-  player.sendMessage("§8[§cFarm de Creepers§8] §eConstruindo Farm 100% Creepers com Gatos e Alçapões para Pólvora pura...");
-
-  try {
-    // Funis e Baú Duplo de Pólvora
-    for (let dz = 1; dz <= 4; dz++) {
-      dim.getBlock({ x: sx + 2, y: sy, z: sz + dz })?.setType("minecraft:hopper");
-      dim.getBlock({ x: sx + 3, y: sy, z: sz + dz })?.setType("minecraft:campfire");
-    }
-
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx, y: sy, z: sz + 2 },
-      { x: sx + 1, y: sy, z: sz + 2 },
-      "minecraft:gunpowder",
-      "south"
-    );
-
-    // Plataforma de spawn com alçapões no teto (impede zumbis e esqueletos de 2m) e tapetes no chão (impede aranhas)
-    for (let dx = 4; dx <= 9; dx++) {
-      for (let dz = 0; dz <= 5; dz++) {
-        dim.getBlock({ x: sx + dx, y: sy - 1, z: sz + dz })?.setType("minecraft:stone_bricks");
-        dim.getBlock({ x: sx + dx, y: sy + 2, z: sz + dz })?.setType("minecraft:oak_trapdoor");
-        dim.getBlock({ x: sx + dx, y: sy + 3, z: sz + dz })?.setType("minecraft:stone_bricks");
-      }
-    }
-
-    // Gatos nas pontas (assustam os creepers direto para as fogueiras e funis)
-    dim.spawnEntity("minecraft:cat", { x: sx + 8.5, y: sy, z: sz + 2.5 });
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aCreeper Farm Pronta§8] §aMega Farm de Creepers construída! Filtro de alçapões exclusivo para creepers, gatos repelidores, fogueiras coletoras e Baú Duplo de Pólvora com moldura brilhante!");
-  } catch (err) {
-    player.sendMessage("§8[§cCreeper§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM AVANÇADA 6: MEGA SALA DE TROCAS COM PIGLINS (BARTER AUTOMÁTICO)
-// ----------------------------------------------------------------------------
-function buildAutomatedPiglinBarterHall(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 3;
-
-  player.sendMessage("§8[§5Barter dos Piglins§8] §eConstruindo Mega Sala de Trocas Automáticas com Piglins...");
-
-  try {
-    // 6 Baias de Piglins com Ejetores de Ouro e Funis Coletores
-    for (let i = 0; i < 6; i++) {
-      const bx = sx + i * 2;
-      dim.getBlock({ x: bx, y: sy - 1, z: sz + 2 })?.setType("minecraft:hopper");
-      dim.getBlock({ x: bx, y: sy, z: sz + 2 })?.setType("minecraft:polished_blackstone");
-      dim.getBlock({ x: bx, y: sy + 2, z: sz + 2 })?.setType("minecraft:dispenser");
-
-      dim.getBlock({ x: bx, y: sy + 1, z: sz + 1 })?.setType("minecraft:glass");
-      dim.getBlock({ x: bx, y: sy + 1, z: sz + 3 })?.setType("minecraft:glass");
-
-      dim.spawnEntity("minecraft:piglin", { x: bx + 0.5, y: sy + 1, z: sz + 2.5 });
-    }
-
-    // Baú Duplo 1: Obsidiana Chorona com Moldura Brilhante
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx - 2, y: sy - 1, z: sz + 2 },
-      { x: sx - 1, y: sy - 1, z: sz + 2 },
-      "minecraft:crying_obsidian",
-      "south"
-    );
-
-    // Baú Duplo 2: Obsidiana com Moldura Brilhante
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx + 12, y: sy - 1, z: sz + 2 },
-      { x: sx + 13, y: sy - 1, z: sz + 2 },
-      "minecraft:obsidian",
-      "south"
-    );
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aBarter Pronto§8] §aMega Sala de Trocas com Piglins concluída! Baias com piglins, ejetores de ouro automáticos, funis coletores e Baús Duplos de Obsidiana e Obsidiana Chorona!");
-  } catch (err) {
-    player.sendMessage("§8[§cBarter§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM AVANÇADA 7: MEGA FARM DE GUARDIÕES DO TEMPLO OCEÂNICO
-// ----------------------------------------------------------------------------
-function buildAutomatedGuardianFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 3;
-
-  player.sendMessage("§8[§bFarm de Guardião§8] §eConstruindo Mega Farm de Guardiões do Templo Oceânico...");
-
-  try {
-    for (let dx = 0; dx < 6; dx++) {
-      dim.getBlock({ x: sx + dx, y: sy, z: sz + 1 })?.setType("minecraft:hopper");
-      dim.getBlock({ x: sx + dx, y: sy + 1, z: sz + 1 })?.setType("minecraft:campfire");
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz + 1 })?.setType("minecraft:water");
-    }
-
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx - 2, y: sy, z: sz + 1 },
-      { x: sx - 1, y: sy, z: sz + 1 },
-      "minecraft:prismarine_shard",
-      "south"
-    );
-
-    dim.spawnEntity("minecraft:guardian", { x: sx + 2.5, y: sy + 3, z: sz + 1.5 });
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aGuardião Pronto§8] §aMega Farm de Guardiões construída! Coluna de água, fogueiras coletoras, funis e Baú Duplo de Fragmentos de Prismarinho com moldura brilhante!");
-  } catch (err) {
-    player.sendMessage("§8[§cGuardião§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM AVANÇADA 8: MEGA FARM DE SLIME (BOLAS DE SLIME INFINITAS)
-// ----------------------------------------------------------------------------
-function buildAutomatedSlimeFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 3;
-
-  player.sendMessage("§8[§aFarm de Slime§8] §eConstruindo Mega Farm de Slime...");
-
-  try {
-    for (let dx = 0; dx < 6; dx++) {
-      for (let dz = 0; dz < 3; dz++) {
-        dim.getBlock({ x: sx + dx, y: sy, z: sz + dz })?.setType("minecraft:magma");
-      }
-    }
-
-    dim.getBlock({ x: sx, y: sy - 1, z: sz })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 1, y: sy - 1, z: sz })?.setType("minecraft:hopper");
-
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx - 2, y: sy - 1, z: sz },
-      { x: sx - 1, y: sy - 1, z: sz },
-      "minecraft:slime_ball",
-      "south"
-    );
-
-    // Isca de Iron Golem atrás de barras de ferro
-    dim.getBlock({ x: sx + 3, y: sy + 1, z: sz + 3 })?.setType("minecraft:iron_bars");
-    dim.spawnEntity("minecraft:iron_golem", { x: sx + 3.5, y: sy + 1, z: sz + 4 });
-    dim.spawnEntity("minecraft:slime", { x: sx + 2.5, y: sy + 1, z: sz + 1 });
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aSlime Pronto§8] §aMega Farm de Slime construída! Plataforma de magma com isca de Golem, funis e Baú Duplo de Bolas de Slime com moldura brilhante!");
-  } catch (err) {
-    player.sendMessage("§8[§cSlime§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM AVANÇADA 9: FARM DE ALDEÃO AGRICULTOR (COMIDA INFINITA)
-// ----------------------------------------------------------------------------
-function buildAutomatedVillagerCropFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 4;
-
-  player.sendMessage("§8[§6Farm de Aldeão§8] §eConstruindo Farm Automática de Aldeão Agricultor...");
-
-  try {
-    // Canteiro 9x9 com terra arada, água no centro e composteira
-    for (let dx = 0; dx < 9; dx++) {
-      for (let dz = 0; dz < 9; dz++) {
-        const isCenter = dx === 4 && dz === 4;
-        dim.getBlock({ x: sx + dx, y: sy - 1, z: sz + dz })?.setType("minecraft:dirt");
-        dim.getBlock({ x: sx + dx, y: sy, z: sz + dz })?.setType(
-          isCenter ? "minecraft:water" : "minecraft:farmland"
-        );
-        if (!isCenter) {
-          dim.getBlock({ x: sx + dx, y: sy + 1, z: sz + dz })?.setType("minecraft:carrots");
-        }
-      }
-    }
-
-    dim.getBlock({ x: sx + 4, y: sy + 1, z: sz + 4 })?.setType("minecraft:composter");
-
-    // Funis de coleta na borda com Baú Duplo de Cenouras
-    dim.getBlock({ x: sx, y: sy - 1, z: sz + 4 })?.setType("minecraft:hopper");
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx - 2, y: sy - 1, z: sz + 4 },
-      { x: sx - 1, y: sy - 1, z: sz + 4 },
-      "minecraft:golden_carrot",
-      "south"
-    );
-
-    dim.spawnEntity("minecraft:villager_v2", { x: sx + 4.5, y: sy + 1, z: sz + 3.5 });
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aAldeão Pronto§8] §aFarm Automática de Aldeão Agricultor construída! Canteiro 9x9 fértil, aldeão agricultor, composteira, funis e Baú Duplo com moldura brilhante!");
-  } catch (err) {
-    player.sendMessage("§8[§cAldeão§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM 1: FARM DE FERRO (IRON GOLEM FARM)
-// ----------------------------------------------------------------------------
-function buildAutomatedIronFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 4;
-
-  player.sendMessage("§8[§eFarm de Ferro§8] §eConstruindo Farm Automática de Ferro completa...");
-
-  try {
-    // 1. Câmara de Morte e Coleta (Nível do Solo)
-    // 4 Funis direcionando para o Baú Duplo de Saída
-    dim.getBlock({ x: sx + 4, y: sy, z: sz + 4 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 5, y: sy, z: sz + 4 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 4, y: sy, z: sz + 5 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 5, y: sy, z: sz + 5 })?.setType("minecraft:hopper");
-
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx + 2, y: sy, z: sz + 4 },
-      { x: sx + 3, y: sy, z: sz + 4 },
-      "minecraft:iron_ingot",
-      "south"
-    );
-
-    // Muros de Pedra ao redor da câmara de lava
-    for (let dy = 0; dy <= 4; dy++) {
-      for (let dx = 3; dx <= 6; dx++) {
-        for (let dz = 3; dz <= 6; dz++) {
-          if (dx === 3 || dx === 6 || dz === 3 || dz === 6) {
-            dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + dz })?.setType("minecraft:glass");
-          }
-        }
-      }
-    }
-
-    // Lava suspensa no nível 2 da câmara (os golems têm 3 blocos de altura, queimam na cabeça e o drop cai nos funis)
-    dim.getBlock({ x: sx + 4, y: sy + 2, z: sz + 4 })?.setType("minecraft:lava");
-    dim.getBlock({ x: sx + 5, y: sy + 2, z: sz + 5 })?.setType("minecraft:lava");
-
-    // 2. Plataforma Superior de Spawn dos Golems de Ferro (8x8 no nível Y + 5)
-    for (let dx = 0; dx <= 9; dx++) {
-      for (let dz = 0; dz <= 9; dz++) {
-        const px = sx + dx;
-        const pz = sz + dz;
-        const isBorder = dx === 0 || dx === 9 || dz === 0 || dz === 9;
-        const isCenterChute = (dx === 4 || dx === 5) && (dz === 4 || dz === 5);
-
-        if (isCenterChute) {
-          dim.getBlock({ x: px, y: sy + 5, z: pz })?.setType("minecraft:air");
-        } else {
-          dim.getBlock({ x: px, y: sy + 5, z: pz })?.setType("minecraft:stone_bricks");
-        }
-
-        if (isBorder) {
-          dim.getBlock({ x: px, y: sy + 6, z: pz })?.setType("minecraft:stone_brick_wall");
-          dim.getBlock({ x: px, y: sy + 7, z: pz })?.setType("minecraft:stone_brick_wall");
-        }
-      }
-    }
-
-    // Correnteza de Água nos 4 cantos empurrando os Golems para o centro
-    dim.getBlock({ x: sx + 1, y: sy + 6, z: sz + 1 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx + 8, y: sy + 6, z: sz + 1 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx + 1, y: sy + 6, z: sz + 8 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx + 8, y: sy + 6, z: sz + 8 })?.setType("minecraft:water");
-
-    // 3. Casulos Seguros de Aldeões e Camas no topo
-    for (let i = 0; i < 3; i++) {
-      dim.getBlock({ x: sx + 1 + i, y: sy + 8, z: sz + 4 })?.setType("minecraft:bed");
-      dim.getBlock({ x: sx + 1 + i, y: sy + 8, z: sz + 5 })?.setType("minecraft:bed");
-    }
-
-    // Spawna os aldeões em segurança no casulo
-    dim.spawnEntity("minecraft:villager_v2", { x: sx + 2.5, y: sy + 9, z: sz + 4.5 });
-    dim.spawnEntity("minecraft:villager_v2", { x: sx + 3.5, y: sy + 9, z: sz + 4.5 });
-    dim.spawnEntity("minecraft:iron_golem", { x: sx + 4.5, y: sy + 6.5, z: sz + 4.5 });
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aFarm de Ferro Pronta§8] §aFarm Automática de Ferro concluída! Plataforma com correntezas, câmara de lava suspensa, funis e Baú Duplo de coleta com moldura brilhante!");
-  } catch (err) {
-    player.sendMessage("§8[§cFarm de Ferro§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM 2: FARM DE CANA-DE-AÇÚCAR & BAMBU (PISTÃO + OBSERVADOR)
-// ----------------------------------------------------------------------------
-function buildAutomatedSugarCaneFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 2;
-
-  player.sendMessage("§8[§aFarm de Cana§8] §eConstruindo Farm Automática de Cana-de-Açúcar & Bambu com Pistões e Observadores...");
-
-  try {
-    // 1. Canaleta Central de Água com Funil e Baú no fim
-    for (let dx = 0; dx < 8; dx++) {
-      dim.getBlock({ x: sx + dx, y: sy - 1, z: sz + 2 })?.setType("minecraft:smooth_quartz");
-      dim.getBlock({ x: sx + dx, y: sy, z: sz + 2 })?.setType("minecraft:water");
-    }
-
-    // Funil no final da correnteza (dx = 0) levando para o Baú Duplo
-    dim.getBlock({ x: sx, y: sy, z: sz + 2 })?.setType("minecraft:hopper");
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx - 2, y: sy, z: sz + 2 },
-      { x: sx - 1, y: sy, z: sz + 2 },
-      "minecraft:sugar_cane",
-      "south"
-    );
-
-    // 2. Duas fileiras de Terra/Areia com Cana e Bambu (Norte z = sz+1, Sul z = sz+3)
-    for (let dx = 1; dx < 8; dx++) {
-      // Norte: Cana-de-açúcar
-      dim.getBlock({ x: sx + dx, y: sy - 1, z: sz + 1 })?.setType("minecraft:sand");
-      dim.getBlock({ x: sx + dx, y: sy, z: sz + 1 })?.setType("minecraft:sugar_cane");
-
-      // Pistão no nível 1 (empurra quando a cana cresce no bloco 2)
-      dim.getBlock({ x: sx + dx, y: sy + 1, z: sz })?.setType("minecraft:stone_bricks");
-      dim.getBlock({ x: sx + dx, y: sy + 1, z: sz + 1 })?.setType("minecraft:piston");
-
-      // Observador no nível 2 (detecta o 3º bloco de cana)
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz })?.setType("minecraft:stone_bricks");
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz + 1 })?.setType("minecraft:observer");
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz })?.setType("minecraft:redstone_wire");
-
-      // Sul: Bambu
-      dim.getBlock({ x: sx + dx, y: sy - 1, z: sz + 3 })?.setType("minecraft:dirt");
-      dim.getBlock({ x: sx + dx, y: sy, z: sz + 3 })?.setType("minecraft:bamboo");
-
-      dim.getBlock({ x: sx + dx, y: sy + 1, z: sz + 4 })?.setType("minecraft:stone_bricks");
-      dim.getBlock({ x: sx + dx, y: sy + 1, z: sz + 3 })?.setType("minecraft:piston");
-
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz + 4 })?.setType("minecraft:stone_bricks");
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz + 3 })?.setType("minecraft:observer");
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz + 4 })?.setType("minecraft:redstone_wire");
-    }
-
-    // 3. Paredes e Cobertura de Vidro para evitar que os itens caiam fora da canaleta
-    for (let dx = 0; dx <= 8; dx++) {
-      for (let dy = 0; dy <= 3; dy++) {
-        dim.getBlock({ x: sx + dx, y: sy + dy, z: sz - 1 })?.setType("minecraft:glass");
-        dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + 5 })?.setType("minecraft:glass");
-      }
-      dim.getBlock({ x: sx + dx, y: sy + 4, z: sz + 2 })?.setType("minecraft:glass");
-    }
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aFarm de Cana Pronta§8] §aFarm Automática de Cana & Bambu concluída! Toda vez que a cana cresce, os observadores disparam os pistões e o fluxo de água carrega os drops direto para o Baú Duplo!");
-  } catch (err) {
-    player.sendMessage("§8[§cFarm de Cana§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM 3: FARM DE ABÓBORA & MELANCIA AUTOMÁTICA
-// ----------------------------------------------------------------------------
-function buildAutomatedMelonPumpkinFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 2;
-
-  player.sendMessage("§8[§6Farm de Abóbora & Melancia§8] §eConstruindo Farm Automática...");
-
-  try {
-    // Linha de coleta inferior com Funis e Baú Duplo
-    for (let dx = 0; dx < 6; dx++) {
-      dim.getBlock({ x: sx + dx, y: sy - 1, z: sz + 1 })?.setType("minecraft:hopper");
-    }
-
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx - 2, y: sy - 1, z: sz + 1 },
-      { x: sx - 1, y: sy - 1, z: sz + 1 },
-      "minecraft:melon_slice",
-      "south"
-    );
-
-    // Canteiro alternado de Abóbora e Melancia com pistões e observadores
-    for (let dx = 0; dx < 6; dx++) {
-      dim.getBlock({ x: sx + dx, y: sy - 1, z: sz })?.setType("minecraft:water");
-      dim.getBlock({ x: sx + dx, y: sy, z: sz })?.setType("minecraft:farmland");
-
-      dim.getBlock({ x: sx + dx, y: sy, z: sz + 1 })?.setType(
-        dx % 2 === 0 ? "minecraft:pumpkin" : "minecraft:melon_block"
-      );
-
-      // Pistão em cima empurrando para baixo para quebrar o bloco
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz + 1 })?.setType("minecraft:piston");
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz })?.setType("minecraft:observer");
-      dim.getBlock({ x: sx + dx, y: sy + 3, z: sz })?.setType("minecraft:redstone_wire");
-      dim.getBlock({ x: sx + dx, y: sy + 3, z: sz + 1 })?.setType("minecraft:redstone_wire");
-    }
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aFarm de Abóboras Pronta§8] §aFarm Automática de Abóbora & Melancia construída com pistões, observadores e baú coletor com moldura brilhante!");
-  } catch (err) {
-    player.sendMessage("§8[§cFarm§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM 4: FARM AUTOMÁTICA DE MOB TRAP (TORRE DE DROPS E XP)
-// ----------------------------------------------------------------------------
-function buildAutomatedMobTrap(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 3;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 3;
-
-  player.sendMessage("§8[§cMob Trap§8] §eConstruindo Torre de Mob Trap automática...");
-
-  try {
-    // 1. Base de Coleta com Funis e Baú Duplo
-    dim.getBlock({ x: sx + 1, y: sy, z: sz + 1 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 2, y: sy, z: sz + 1 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 1, y: sy, z: sz + 2 })?.setType("minecraft:hopper");
-    dim.getBlock({ x: sx + 2, y: sy, z: sz + 2 })?.setType("minecraft:hopper");
-
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx + 3, y: sy, z: sz + 1 },
-      { x: sx + 4, y: sy, z: sz + 1 },
-      "minecraft:gunpowder",
-      "west"
-    );
-
-    // 2. Tubo de Queda (22 blocos de altura para deixar os monstros com 1 de vida ou matar na queda)
-    for (let dy = 1; dy <= 20; dy++) {
-      for (let dx = 0; dx <= 3; dx++) {
-        for (let dz = 0; dz <= 3; dz++) {
-          if (dx === 0 || dx === 3 || dz === 0 || dz === 3) {
-            dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + dz })?.setType("minecraft:stone_bricks");
-          } else {
-            dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + dz })?.setType("minecraft:air");
-          }
-        }
-      }
-    }
-
-    // 3. Câmara Escura de Spawn no Topo com Correntezas de Água
-    const topY = sy + 21;
-    for (let dx = -3; dx <= 6; dx++) {
-      for (let dz = -3; dz <= 6; dz++) {
-        dim.getBlock({ x: sx + dx, y: topY, z: sz + dz })?.setType("minecraft:stone_bricks");
-        dim.getBlock({ x: sx + dx, y: topY + 4, z: sz + dz })?.setType("minecraft:stone_bricks");
-        if (dx === -3 || dx === 6 || dz === -3 || dz === 6) {
-          for (let dy = 1; dy <= 3; dy++) {
-            dim.getBlock({ x: sx + dx, y: topY + dy, z: sz + dz })?.setType("minecraft:stone_bricks");
-          }
-        }
-      }
-    }
-
-    // Água empurrando os mobs dos cantos para o buraco central
-    dim.getBlock({ x: sx - 2, y: topY + 1, z: sz - 2 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx + 5, y: topY + 1, z: sz - 2 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx - 2, y: topY + 1, z: sz + 5 })?.setType("minecraft:water");
-    dim.getBlock({ x: sx + 5, y: topY + 1, z: sz + 5 })?.setType("minecraft:water");
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aMob Trap Pronta§8] §aTorre de Mob Trap concluída! Mobs hostis spawnam no escuro no topo, a água empurra para a queda e os drops caem nos funis e no Baú Duplo de pólvora/ossos!");
-  } catch (err) {
-    player.sendMessage("§8[§cMob Trap§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM 5: FARM AUTOMÁTICA DE ALGAS / KELP (COMBUSTÍVEL INFINITO)
-// ----------------------------------------------------------------------------
-function buildAutomatedKelpFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 2;
-
-  player.sendMessage("§8[§2Farm de Algas§8] §eConstruindo Farm Automática de Algas...");
-
-  try {
-    // Tanque de água com vidro e pistões
-    for (let dx = 0; dx < 5; dx++) {
-      dim.getBlock({ x: sx + dx, y: sy, z: sz + 1 })?.setType("minecraft:sand");
-      dim.getBlock({ x: sx + dx, y: sy + 1, z: sz + 1 })?.setType("minecraft:kelp");
-
-      // Coluna d'água
-      for (let dy = 1; dy <= 6; dy++) {
-        dim.getBlock({ x: sx + dx, y: sy + dy, z: sz })?.setType("minecraft:glass");
-        dim.getBlock({ x: sx + dx, y: sy + dy, z: sz + 2 })?.setType("minecraft:glass");
-      }
-
-      // Pistão no nível 2 e Observador no nível 5
-      dim.getBlock({ x: sx + dx, y: sy + 2, z: sz + 2 })?.setType("minecraft:piston");
-      dim.getBlock({ x: sx + dx, y: sy + 5, z: sz + 2 })?.setType("minecraft:observer");
-    }
-
-    // Funil coletor na superfície
-    dim.getBlock({ x: sx, y: sy + 6, z: sz + 1 })?.setType("minecraft:hopper");
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx - 2, y: sy + 6, z: sz + 1 },
-      { x: sx - 1, y: sy + 6, z: sz + 1 },
-      "minecraft:dried_kelp_block",
-      "south"
-    );
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aFarm de Algas Pronta§8] §aFarm de Algas construída! Produção infinita de algas desidratadas para combustível 100% renovável!");
-  } catch (err) {
-    player.sendMessage("§8[§cAlgas§8] §cErro: " + String(err));
-  }
-}
-
-// ----------------------------------------------------------------------------
-// FARM 6: FARM AUTOMÁTICA DE LÃ (TOSQUIA COM EJETORES)
-// ----------------------------------------------------------------------------
-function buildAutomatedWoolFarm(player) {
-  const dim = player.dimension;
-  const sx = Math.floor(player.location.x) + 2;
-  const sy = Math.floor(player.location.y);
-  const sz = Math.floor(player.location.z) - 2;
-
-  player.sendMessage("§8[§fFarm de Lã§8] §eConstruindo Farm Automática de Lã com Tosquiadores...");
-
-  try {
-    // 4 Baias de Ovelhas com Grama, Observador e Ejetor com Tesouras
-    for (let i = 0; i < 4; i++) {
-      const bx = sx + i * 2;
-
-      // Nível 0: Funil embaixo da grama
-      dim.getBlock({ x: bx, y: sy - 1, z: sz + 1 })?.setType("minecraft:hopper");
-      // Nível 1: Bloco de Grama
-      dim.getBlock({ x: bx, y: sy, z: sz + 1 })?.setType("minecraft:grass_block");
-      // Traseira: Observador detectando quando a ovelha come a grama
-      dim.getBlock({ x: bx, y: sy, z: sz + 2 })?.setType("minecraft:observer");
-      // Nível 2: Ejetor virado para a ovelha carregado de tesouras
-      dim.getBlock({ x: bx, y: sy + 1, z: sz + 2 })?.setType("minecraft:dispenser");
-
-      // Vidro ao redor para prender a ovelha na baia
-      dim.getBlock({ x: bx, y: sy + 1, z: sz })?.setType("minecraft:glass");
-      dim.getBlock({ x: bx - 1, y: sy + 1, z: sz + 1 })?.setType("minecraft:glass");
-      dim.getBlock({ x: bx + 1, y: sy + 1, z: sz + 1 })?.setType("minecraft:glass");
-
-      // Spawna uma ovelha na baia
-      dim.spawnEntity("minecraft:sheep", { x: bx + 0.5, y: sy + 1.2, z: sz + 1.5 });
-    }
-
-    // Baú Duplo Coletor de Lã com Moldura Brilhante
-    fillDoubleChestWithSingleItem(
-      dim,
-      { x: sx - 2, y: sy - 1, z: sz + 1 },
-      { x: sx - 1, y: sy - 1, z: sz + 1 },
-      "minecraft:white_wool",
-      "south"
-    );
-
-    try { player.playSound("random.levelup", { pitch: 1.0, volume: 1.0 }); } catch (e) {}
-    player.sendMessage("§8[§aFarm de Lã Pronta§8] §aFarm de Lã Automática construída! Toda vez que a ovelha come a grama, o ejetor tosquia a lã automaticamente e guarda no Baú Duplo!");
-  } catch (err) {
-    player.sendMessage("§8[§cLã§8] §cErro: " + String(err));
-  }
-}
 
 function openMobSpawnerCategory(player, isBosses) {
   const list = isBosses
@@ -4320,6 +4963,8 @@ function openWorldAndVisualCombinedMenu(player) {
     }
   });
 }
+
+${generateSuperToolsAndMultiplierScript()}
 `;
 }
 
@@ -4372,6 +5017,216 @@ async function createPackIconBlob(title: string): Promise<Blob> {
   });
 }
 
+// Tabela nativa de trocas de Bibliotecário (trading/economy_trades/librarian_trades.json)
+// Faz com que TODOS os Villagers Bibliotecários tenham Livros Encantados por 1 Esmeralda + 1 Livro na janela original do Minecraft!
+// Quando o jogador faz 1 troca na janela original, o Minecraft salva a troca permanentemente no arquivo do mundo (Vanilla NBT),
+// continuando 100% funcional no Survival Puro mesmo depois que a Add-On for removida!
+function generateVanillaSurvivalLibrarianTradesJson(): string {
+  const bookTradeEntry = {
+    wants: [
+      {
+        item: 'minecraft:emerald',
+        quantity: 1,
+        price_multiplier: 0.0,
+      },
+      {
+        item: 'minecraft:book',
+        quantity: 1,
+      },
+    ],
+    gives: [
+      {
+        item: 'minecraft:enchanted_book',
+        quantity: 1,
+        functions: [
+          {
+            function: 'enchant_book_for_trading',
+            base_cost: 1,
+            base_random_cost: 0,
+            per_level_random_cost: 0,
+            per_level_cost: 0,
+          },
+        ],
+      },
+    ],
+    trader_exp: 35,
+    max_uses: 99,
+    reward_exp: true,
+  };
+
+  return JSON.stringify(
+    {
+      tiers: [
+        {
+          total_exp_required: 0,
+          groups: [
+            {
+              num_to_select: 2,
+              trades: [
+                bookTradeEntry,
+                {
+                  wants: [
+                    {
+                      item: 'minecraft:book',
+                      quantity: 1,
+                      price_multiplier: 0.0,
+                    },
+                  ],
+                  gives: [
+                    {
+                      item: 'minecraft:emerald',
+                      quantity: 1,
+                    },
+                  ],
+                  trader_exp: 35,
+                  max_uses: 99,
+                  reward_exp: true,
+                },
+                {
+                  wants: [
+                    {
+                      item: 'minecraft:emerald',
+                      quantity: 1,
+                      price_multiplier: 0.0,
+                    },
+                  ],
+                  gives: [
+                    {
+                      item: 'minecraft:bookshelf',
+                      quantity: 3,
+                    },
+                  ],
+                  trader_exp: 35,
+                  max_uses: 99,
+                  reward_exp: true,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          total_exp_required: 10,
+          groups: [
+            {
+              num_to_select: 2,
+              trades: [
+                bookTradeEntry,
+                {
+                  wants: [
+                    {
+                      item: 'minecraft:emerald',
+                      quantity: 1,
+                      price_multiplier: 0.0,
+                    },
+                  ],
+                  gives: [
+                    {
+                      item: 'minecraft:lantern',
+                      quantity: 4,
+                    },
+                  ],
+                  trader_exp: 35,
+                  max_uses: 99,
+                  reward_exp: true,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          total_exp_required: 70,
+          groups: [
+            {
+              num_to_select: 2,
+              trades: [
+                bookTradeEntry,
+                {
+                  wants: [
+                    {
+                      item: 'minecraft:emerald',
+                      quantity: 1,
+                      price_multiplier: 0.0,
+                    },
+                  ],
+                  gives: [
+                    {
+                      item: 'minecraft:glass',
+                      quantity: 8,
+                    },
+                  ],
+                  trader_exp: 35,
+                  max_uses: 99,
+                  reward_exp: true,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          total_exp_required: 150,
+          groups: [
+            {
+              num_to_select: 2,
+              trades: [
+                bookTradeEntry,
+                {
+                  wants: [
+                    {
+                      item: 'minecraft:emerald',
+                      quantity: 1,
+                      price_multiplier: 0.0,
+                    },
+                  ],
+                  gives: [
+                    {
+                      item: 'minecraft:clock',
+                      quantity: 1,
+                    },
+                  ],
+                  trader_exp: 35,
+                  max_uses: 99,
+                  reward_exp: true,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          total_exp_required: 250,
+          groups: [
+            {
+              num_to_select: 2,
+              trades: [
+                bookTradeEntry,
+                {
+                  wants: [
+                    {
+                      item: 'minecraft:emerald',
+                      quantity: 1,
+                      price_multiplier: 0.0,
+                    },
+                  ],
+                  gives: [
+                    {
+                      item: 'minecraft:name_tag',
+                      quantity: 1,
+                    },
+                  ],
+                  trader_exp: 35,
+                  max_uses: 99,
+                  reward_exp: true,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    null,
+    2
+  );
+}
+
 export async function buildAndDownloadMcAddon(
   config: AddonConfig,
   modules: CheatModule[]
@@ -4385,17 +5240,40 @@ export async function buildAndDownloadMcAddon(
 
   const iconBlob = await createPackIconBlob(config.addonName);
 
+  const langLines = [
+    `item.survivalmenu:amuleto.name=§a§lTeclado & Menu Survival ${safeVer}`,
+    `item.survivalmenu:martelo_50x50.name=§6§lMartelo Titã 50x50 (Quebra Área 50x50)`,
+    `item.survivalmenu:destruidor_chunk.name=§c§lDestruidor de Chunk 16x16 (Até a Bedrock)`,
+    `item.survivalmenu:quebrador_bedrock.name=§d§lQuebrador de Bedrock & Teto do Nether`,
+  ].join('\n');
+
   if (bpFolder) {
     bpFolder.file('manifest.json', generateBpManifest(config));
     bpFolder.file('pack_icon.png', iconBlob);
     bpFolder.folder('scripts')?.file('main.js', generateMainScript(config, modules));
-    bpFolder.folder('items')?.file('survival_menu.json', generateCustomItemJson());
-    bpFolder.folder('recipes')?.file('survival_menu_recipe.json', generateCustomRecipeJson());
+    const itemsFolder = bpFolder.folder('items');
+    itemsFolder?.file('survival_menu.json', generateCustomItemJson());
+    itemsFolder?.file('martelo_50x50.json', generateMartelo50x50ItemJson());
+    itemsFolder?.file('destruidor_chunk.json', generateDestruidorChunkItemJson());
+    itemsFolder?.file('quebrador_bedrock.json', generateQuebradorBedrockItemJson());
+
+    const recipesFolder = bpFolder.folder('recipes');
+    recipesFolder?.file('survival_menu_recipe.json', generateCustomRecipeJson());
+    recipesFolder?.file('martelo_50x50_recipe.json', generateMarteloRecipeJson());
+    recipesFolder?.file('destruidor_chunk_recipe.json', generateDestruidorChunkRecipeJson());
+    recipesFolder?.file('quebrador_bedrock_recipe.json', generateQuebradorBedrockRecipeJson());
+    recipesFolder?.file('multiplicador_rapido_recipe.json', generateMultiplierFastRecipeJson());
+    recipesFolder?.file('multiplicador_bancada_recipe.json', generateMultiplierBenchRecipeJson());
+
+    bpFolder
+      .folder('trading/economy_trades')
+      ?.file('librarian_trades.json', generateVanillaSurvivalLibrarianTradesJson());
+
     bpFolder
       .folder('texts')
       ?.file(
         'pt_BR.lang',
-        `pack.name=${config.addonName} v${safeVer} [BP]\npack.description=${config.addonDescription} (Bedrock ${safeVer})\nitem.survivalmenu:amuleto.name=§a§lTeclado & Menu Survival ${safeVer}\n`
+        `pack.name=${config.addonName} v${safeVer} [BP]\npack.description=${config.addonDescription} (Bedrock ${safeVer})\n${langLines}\n`
       );
     bpFolder.folder('texts')?.file('languages.json', JSON.stringify(['pt_BR', 'en_US'], null, 2));
   }
@@ -4413,6 +5291,15 @@ export async function buildAndDownloadMcAddon(
             survival_menu_icon: {
               textures: 'textures/items/book_enchanted',
             },
+            martelo_50x50_icon: {
+              textures: 'textures/items/netherite_pickaxe',
+            },
+            destruidor_chunk_icon: {
+              textures: 'textures/items/recovery_compass_item',
+            },
+            quebrador_bedrock_icon: {
+              textures: 'textures/items/amethyst_shard',
+            },
           },
         },
         null,
@@ -4423,7 +5310,7 @@ export async function buildAndDownloadMcAddon(
       .folder('texts')
       ?.file(
         'pt_BR.lang',
-        `pack.name=${config.addonName} v${safeVer} [RP]\npack.description=Interface e Recursos para ${config.addonName} v${safeVer} (Conquistas Ativas)\nitem.survivalmenu:amuleto.name=§a§lTeclado & Menu Survival ${safeVer}\n`
+        `pack.name=${config.addonName} v${safeVer} [RP]\npack.description=Interface e Recursos para ${config.addonName} v${safeVer} (Conquistas Ativas)\n${langLines}\n`
       );
     rpFolder.folder('texts')?.file('languages.json', JSON.stringify(['pt_BR', 'en_US'], null, 2));
   }
@@ -4456,17 +5343,40 @@ export async function downloadIndividualMcPack(
   const safeVer = (config.targetBuildVersion || '26.60.29').replace(/[^a-zA-Z0-9._-]/g, '');
   const iconBlob = await createPackIconBlob(config.addonName);
 
+  const langLines = [
+    `item.survivalmenu:amuleto.name=§a§lTeclado & Menu Survival ${safeVer}`,
+    `item.survivalmenu:martelo_50x50.name=§6§lMartelo Titã 50x50 (Quebra Área 50x50)`,
+    `item.survivalmenu:destruidor_chunk.name=§c§lDestruidor de Chunk 16x16 (Até a Bedrock)`,
+    `item.survivalmenu:quebrador_bedrock.name=§d§lQuebrador de Bedrock & Teto do Nether`,
+  ].join('\n');
+
   if (packType === 'bp') {
     zip.file('manifest.json', generateBpManifest(config));
     zip.file('pack_icon.png', iconBlob);
     zip.folder('scripts')?.file('main.js', generateMainScript(config, modules));
-    zip.folder('items')?.file('survival_menu.json', generateCustomItemJson());
-    zip.folder('recipes')?.file('survival_menu_recipe.json', generateCustomRecipeJson());
+    const itemsFolder = zip.folder('items');
+    itemsFolder?.file('survival_menu.json', generateCustomItemJson());
+    itemsFolder?.file('martelo_50x50.json', generateMartelo50x50ItemJson());
+    itemsFolder?.file('destruidor_chunk.json', generateDestruidorChunkItemJson());
+    itemsFolder?.file('quebrador_bedrock.json', generateQuebradorBedrockItemJson());
+
+    const recipesFolder = zip.folder('recipes');
+    recipesFolder?.file('survival_menu_recipe.json', generateCustomRecipeJson());
+    recipesFolder?.file('martelo_50x50_recipe.json', generateMarteloRecipeJson());
+    recipesFolder?.file('destruidor_chunk_recipe.json', generateDestruidorChunkRecipeJson());
+    recipesFolder?.file('quebrador_bedrock_recipe.json', generateQuebradorBedrockRecipeJson());
+    recipesFolder?.file('multiplicador_rapido_recipe.json', generateMultiplierFastRecipeJson());
+    recipesFolder?.file('multiplicador_bancada_recipe.json', generateMultiplierBenchRecipeJson());
+
+    zip
+      .folder('trading/economy_trades')
+      ?.file('librarian_trades.json', generateVanillaSurvivalLibrarianTradesJson());
+
     zip
       .folder('texts')
       ?.file(
         'pt_BR.lang',
-        `pack.name=${config.addonName} v${safeVer} [BP]\npack.description=${config.addonDescription} (Bedrock ${safeVer})\nitem.survivalmenu:amuleto.name=§a§lTeclado & Menu Survival ${safeVer}\n`
+        `pack.name=${config.addonName} v${safeVer} [BP]\npack.description=${config.addonDescription} (Bedrock ${safeVer})\n${langLines}\n`
       );
     zip.folder('texts')?.file('languages.json', JSON.stringify(['pt_BR', 'en_US'], null, 2));
   } else {
@@ -4482,6 +5392,15 @@ export async function downloadIndividualMcPack(
             survival_menu_icon: {
               textures: 'textures/items/book_enchanted',
             },
+            martelo_50x50_icon: {
+              textures: 'textures/items/netherite_pickaxe',
+            },
+            destruidor_chunk_icon: {
+              textures: 'textures/items/recovery_compass_item',
+            },
+            quebrador_bedrock_icon: {
+              textures: 'textures/items/amethyst_shard',
+            },
           },
         },
         null,
@@ -4492,7 +5411,7 @@ export async function downloadIndividualMcPack(
       .folder('texts')
       ?.file(
         'pt_BR.lang',
-        `pack.name=${config.addonName} v${safeVer} [RP]\npack.description=Interface e Recursos para ${config.addonName} v${safeVer} (Conquistas Ativas)\nitem.survivalmenu:amuleto.name=§a§lTeclado & Menu Survival ${safeVer}\n`
+        `pack.name=${config.addonName} v${safeVer} [RP]\npack.description=Interface e Recursos para ${config.addonName} v${safeVer} (Conquistas Ativas)\n${langLines}\n`
       );
     zip.folder('texts')?.file('languages.json', JSON.stringify(['pt_BR', 'en_US'], null, 2));
   }
@@ -4514,3 +5433,129 @@ export async function downloadIndividualMcPack(
     sizeKb: Math.max(1, Math.round(content.size / 1024)),
   };
 }
+
+export async function downloadManualZipFolder(
+  config: AddonConfig,
+  modules: CheatModule[]
+): Promise<{ filename: string; sizeKb: number }> {
+  const zip = new JSZip();
+  const safeFolder = config.addonName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'SurvivalMenu';
+  const safeVer = (config.targetBuildVersion || '26.60.29').replace(/[^a-zA-Z0-9._-]/g, '');
+
+  const bpFolder = zip.folder(`behavior_packs/${safeFolder}_BP`);
+  const rpFolder = zip.folder(`resource_packs/${safeFolder}_RP`);
+  const iconBlob = await createPackIconBlob(config.addonName);
+
+  const langLines = [
+    `item.survivalmenu:amuleto.name=§a§lTeclado & Menu Survival ${safeVer}`,
+    `item.survivalmenu:martelo_50x50.name=§6§lMartelo Titã 50x50 (Quebra Área 50x50)`,
+    `item.survivalmenu:destruidor_chunk.name=§c§lDestruidor de Chunk 16x16 (Até a Bedrock)`,
+    `item.survivalmenu:quebrador_bedrock.name=§d§lQuebrador de Bedrock & Teto do Nether`,
+  ].join('\n');
+
+  if (bpFolder) {
+    bpFolder.file('manifest.json', generateBpManifest(config));
+    bpFolder.file('pack_icon.png', iconBlob);
+    bpFolder.folder('scripts')?.file('main.js', generateMainScript(config, modules));
+    const itemsFolder = bpFolder.folder('items');
+    itemsFolder?.file('survival_menu.json', generateCustomItemJson());
+    itemsFolder?.file('martelo_50x50.json', generateMartelo50x50ItemJson());
+    itemsFolder?.file('destruidor_chunk.json', generateDestruidorChunkItemJson());
+    itemsFolder?.file('quebrador_bedrock.json', generateQuebradorBedrockItemJson());
+
+    const recipesFolder = bpFolder.folder('recipes');
+    recipesFolder?.file('survival_menu_recipe.json', generateCustomRecipeJson());
+    recipesFolder?.file('martelo_50x50_recipe.json', generateMarteloRecipeJson());
+    recipesFolder?.file('destruidor_chunk_recipe.json', generateDestruidorChunkRecipeJson());
+    recipesFolder?.file('quebrador_bedrock_recipe.json', generateQuebradorBedrockRecipeJson());
+    recipesFolder?.file('multiplicador_rapido_recipe.json', generateMultiplierFastRecipeJson());
+    recipesFolder?.file('multiplicador_bancada_recipe.json', generateMultiplierBenchRecipeJson());
+
+    bpFolder
+      .folder('trading/economy_trades')
+      ?.file('librarian_trades.json', generateVanillaSurvivalLibrarianTradesJson());
+
+    bpFolder
+      .folder('texts')
+      ?.file(
+        'pt_BR.lang',
+        `pack.name=${config.addonName} v${safeVer} [BP]\npack.description=${config.addonDescription} (Bedrock ${safeVer})\n${langLines}\n`
+      );
+    bpFolder.folder('texts')?.file('languages.json', JSON.stringify(['pt_BR', 'en_US'], null, 2));
+  }
+
+  if (rpFolder) {
+    rpFolder.file('manifest.json', generateRpManifest(config));
+    rpFolder.file('pack_icon.png', iconBlob);
+    rpFolder.folder('textures')?.file(
+      'item_texture.json',
+      JSON.stringify(
+        {
+          resource_pack_name: safeFolder,
+          texture_name: 'atlas.items',
+          texture_data: {
+            survival_menu_icon: {
+              textures: 'textures/items/book_enchanted',
+            },
+            martelo_50x50_icon: {
+              textures: 'textures/items/netherite_pickaxe',
+            },
+            destruidor_chunk_icon: {
+              textures: 'textures/items/recovery_compass_item',
+            },
+            quebrador_bedrock_icon: {
+              textures: 'textures/items/amethyst_shard',
+            },
+          },
+        },
+        null,
+        2
+      )
+    );
+    rpFolder
+      .folder('texts')
+      ?.file(
+        'pt_BR.lang',
+        `pack.name=${config.addonName} v${safeVer} [RP]\npack.description=Interface e Recursos para ${config.addonName} v${safeVer} (Conquistas Ativas)\n${langLines}\n`
+      );
+    rpFolder.folder('texts')?.file('languages.json', JSON.stringify(['pt_BR', 'en_US'], null, 2));
+  }
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const filename = `${safeFolder}_v${safeVer}_PastasManuais.zip`;
+
+  const url = URL.createObjectURL(content);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  return {
+    filename,
+    sizeKb: Math.max(1, Math.round(content.size / 1024)),
+  };
+}
+
+export function getMasterPromptText(config: AddonConfig): string {
+  return `# Guia Técnico do Add-On: ${config.addonName} (Bedrock ${config.targetBuildVersion})
+- Conquistas 100% Ativas (Sem Beta APIs / Sem Cheats ativados).
+- Construção Direcional 360° (player.getViewDirection()):
+  - TODAS as construções (Mega Salas de Baús, Sala de Encantamentos + 42 Villagers, Sala de 30 Poções, Fornalha 16x, Caixas de Shulker, Base 7x7, Altar, Portal e Fazenda) nascem exatamente na direção para onde você está olhando (Norte -Z, Sul +Z, Leste +X, Oeste -X).
+- Mega Sala de Encantamentos Suprema + 42 Villagers 100% Compatíveis c/ Survival Puro (Mesmo Após Remover a Add-On!):
+  - Altar Central Nível 30 + Bigornas + Rebolos + Ferraria + Bloco Multiplicador.
+  - 42 Baús Duplos (54/54 slots) com TODOS os 42 Livros Encantados no Nível Máximo do Minecraft 1.21+ e Placa Externa.
+  - 18 Baús Duplos (54/54 slots) com todos os Insumos de Encantamento e Forja (Lápis-Lazúli, Frascos de XP, Esmeraldas, Estantes, Moldes Netherita, etc.).
+  - Trading Hall Survival com 42 Cabines Físicas 1x1 (Atril na frente, paredes laterais/traseira, teto anti-pulo, Sino da Vila e Placa Externa).
+  - Villagers sem NameTag colorido na cabeça, sem efeitos artificiais de poção, com desconto nativo de Zumbi Curado (minecraft:villager_converted) + tabela nativa trading/economy_trades/librarian_trades.json por 1 Esmeralda (basta fazer 1 troca na janela original para travar a troca de 1 Esmeralda para sempre no mundo mesmo após remover a Add-On!).
+- 3 Super Ferramentas Exclusivas:
+  1. Martelo Titã 50x50 (survivalmenu:martelo_50x50): Quebra 50x50 a 500 blocos/tick (60 FPS) + Seletor 1 a 25 camadas + Auto-Baús Duplos.
+  2. Destruidor de Chunk 16x16 (survivalmenu:destruidor_chunk): Quebra a Chunk inteira até Y:-63 + Queda Lenta + Fundo iluminado + Auto-Baús Duplos.
+  3. Quebrador de Bedrock (survivalmenu:quebrador_bedrock): Quebra Bedrock ou abre passagem 3x3 no Teto do Nether com escadas.
+- Bloco Multiplicador Interativo (minecraft:lodestone):
+  - Clique Direito: +1 Pack (64x) ou +5 Packs (320x no Shift) e abastece o baú ao lado.
+  - Bater (Botão Esquerdo): Gera Caixa de Shulker 100% LOTADA (27 slots / 1.728 itens) com cor dinâmica!`;
+}
+

@@ -16,22 +16,26 @@ import {
   generateCustomRecipeJson,
   buildAndDownloadMcAddon,
   downloadIndividualMcPack,
+  downloadManualZipFolder,
   runAddonTechnicalAudit,
+  getMasterPromptText,
 } from './utils/addonGenerator';
 import { BedrockSimulator } from './components/BedrockSimulator';
 import {
   Download,
   Copy,
   Check,
+  FolderArchive,
   RefreshCw,
   Search,
   Sliders,
   FileCode,
   ShieldCheck,
   BookOpen,
+  Sparkles,
 } from 'lucide-react';
 
-type FileTab = 'main_js' | 'bp_manifest' | 'rp_manifest' | 'item_json' | 'recipe_json';
+type FileTab = 'main_js' | 'bp_manifest' | 'rp_manifest' | 'item_json' | 'recipe_json' | 'master_prompt';
 type CategoryFilter = 'all' | 'survival' | 'items' | 'movement' | 'world' | 'visual';
 
 export default function App() {
@@ -45,25 +49,25 @@ export default function App() {
     null
   );
 
-  const [config, setConfig] = useState<AddonConfig>({
+  const [config, setConfig] = useState<AddonConfig>(() => ({
     addonName: 'SurvivalMenu Pro',
     addonAuthor: 'BedrockForge',
     addonDescription:
-      'Menu Cheats, Teclado de Armaduras/Ferramentas Encantadas, Bigorna Colorida, VeinMiner e Multiplicador com Conquistas 100% Ativas',
+      'Menu Cheats, Grimório do Menu na Mão, Teclado de Armaduras/Ferramentas Encantadas, VeinMiner e Multiplicador com Conquistas 100% Ativas',
     targetBuildVersion: '26.60.29',
-    minEngineVersion: [1, 21, 70],
+    minEngineVersion: [1, 21, 0],
     serverApiVersion: '1.14.0',
     serverUiVersion: '1.3.0',
     triggerType: 'double_shift_keypad',
     soundFeedback: true,
     actionbarHud: true,
     keepInventoryScript: true,
-    bpHeaderUuid: 'a47f91c2-8b1e-4d3a-9c52-1f2e3d4c5b6a',
-    bpModuleUuid: 'b58e02d3-9c2f-4e4b-8d63-2a3f4e5d6c7b',
-    bpScriptUuid: 'c69f13e4-0d3a-4f5c-9e74-3b4a5f6e7d8c',
-    rpHeaderUuid: 'd70a24f5-1e4b-4a6d-8f85-4c5b6a7f8e9d',
-    rpModuleUuid: 'e81b35a6-2f5c-4b7e-9a96-5d6c7b8a9f0e',
-  });
+    bpHeaderUuid: generateUuidV4(),
+    bpModuleUuid: generateUuidV4(),
+    bpScriptUuid: generateUuidV4(),
+    rpHeaderUuid: generateUuidV4(),
+    rpModuleUuid: generateUuidV4(),
+  }));
 
   const toggleModule = (id: string) => {
     setModules((prev) => prev.map((m) => (m.id === id ? { ...m, enabled: !m.enabled } : m)));
@@ -143,6 +147,16 @@ export default function App() {
     }
   };
 
+  const handleDownloadManualZip = async () => {
+    setIsExporting(true);
+    try {
+      const result = await downloadManualZipFolder(config, modules);
+      setLastExportInfo(result);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const filteredModules = useMemo(() => {
     return modules.filter((m) => {
       const matchesCat = categoryFilter === 'all' || m.category === categoryFilter;
@@ -168,6 +182,8 @@ export default function App() {
         return generateCustomItemJson();
       case 'recipe_json':
         return generateCustomRecipeJson();
+      case 'master_prompt':
+        return getMasterPromptText(config);
     }
   }, [activeFileTab, config, modules]);
 
@@ -216,6 +232,14 @@ export default function App() {
               className="hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0"
             >
               Guia de Conquistas
+            </a>
+            <a
+              href="#codigo"
+              onClick={() => setActiveFileTab('master_prompt')}
+              className="text-amber-400 hover:text-amber-300 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 inline-flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Prompt Mestre
             </a>
           </nav>
 
@@ -285,6 +309,19 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {/* Bedrock 26.60.29 Compatibility & Activation Steps */}
+              <div className="mb-6 p-4 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs text-slate-300 space-y-2">
+                <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+                  <span>⚡ Como Funcionar 100% no Bedrock {config.targetBuildVersion} (Zero Erros de Importação):</span>
+                </div>
+                <ol className="list-decimal list-inside space-y-1.5 text-slate-300">
+                  <li><strong className="text-white">Opção 1 (Automática):</strong> Clique em <code className="text-emerald-300 font-mono">Baixar .MCADDON Completo</code>. Ele contém os 2 pacotes (BP e RP) prontos para importar com 1 clique no PC ou celular.</li>
+                  <li><strong className="text-white">Opção 2 (Se der falha no aparelho):</strong> Baixe o <strong className="text-emerald-400">BP (.mcpack)</strong> e o <strong className="text-sky-400">RP (.mcpack)</strong> separados abaixo! Cada um importa de forma independente sem conflitos.</li>
+                  <li><strong className="text-white">Ativar no Mundo:</strong> Em <em>Configurações do Mundo</em> &rarr; ative o <strong>Pacote de Comportamento (BP)</strong> e o <strong>Pacote de Recursos (RP)</strong>. Mantenha em <strong>Sobrevivência sem Cheats</strong> para preservar 100% das suas conquistas!</li>
+                  <li><strong className="text-white">Entrada no Mapa:</strong> O <strong className="text-emerald-300">Grimório do Menu Survival (Livro Encantado)</strong> é entregue automaticamente no <strong>Slot 0 da sua mão</strong> e na hotbar. Basta clicar no chão, agachar ou digitar <code className="text-emerald-300 font-mono">!menu</code> no chat!</li>
+                </ol>
+              </div>
             </div>
 
             {/* Primary Download Action Box */}
@@ -292,7 +329,7 @@ export default function App() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="text-xs text-slate-400">
-                    Pacote calibrado para Minecraft Bedrock {config.targetBuildVersion}
+                    Pacote calibrado para Minecraft Bedrock {config.targetBuildVersion} (Conquistas Ativas)
                   </div>
                   <div className="text-sm font-mono text-emerald-400 tabular-nums mt-0.5">
                     {lastExportInfo
@@ -305,23 +342,24 @@ export default function App() {
                   type="button"
                   onClick={handleDownloadAddon}
                   disabled={isExporting}
-                  className="inline-flex items-center justify-center gap-2.5 px-5 py-3 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2.5 px-5 py-3 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-lg shadow-emerald-950/40"
                 >
                   <Download className="w-4 h-4" />
-                  {isExporting ? 'Gerando Arquivo...' : `Baixar .MCADDON Completo`}
+                  {isExporting ? 'Gerando Pacote...' : `Baixar .MCADDON Completo`}
                 </button>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/60 text-xs">
-                <span className="text-slate-400">
-                  Ou baixe os pacotes separados (ideal para gerenciadores de arquivo Android/iOS):
+                <span className="text-slate-400 font-medium">
+                  Downloads Diretos & Alternativos (Evita qualquer erro de importação):
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => handleDownloadPack('bp')}
                     disabled={isExporting}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs text-slate-200 bg-slate-800 hover:bg-slate-700 border border-emerald-500/40 hover:border-emerald-500 rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    title="Baixar apenas o Pacote de Comportamento para importar direto"
                   >
                     <Download className="w-3.5 h-3.5 text-emerald-400" />
                     Baixar BP (.mcpack)
@@ -330,10 +368,21 @@ export default function App() {
                     type="button"
                     onClick={() => handleDownloadPack('rp')}
                     disabled={isExporting}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs text-slate-200 bg-slate-800 hover:bg-slate-700 border border-sky-500/40 hover:border-sky-500 rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    title="Baixar apenas o Pacote de Recursos"
                   >
                     <Download className="w-3.5 h-3.5 text-sky-400" />
                     Baixar RP (.mcpack)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadManualZip}
+                    disabled={isExporting}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    title="Baixar arquivo ZIP com pastas descompactadas e tutorial de instalação manual"
+                  >
+                    <FolderArchive className="w-3.5 h-3.5 text-amber-400" />
+                    Pastas ZIP (Manual)
                   </button>
                 </div>
               </div>
@@ -370,7 +419,17 @@ export default function App() {
                     <input
                       type="text"
                       value={config.addonName}
-                      onChange={(e) => setConfig((p) => ({ ...p, addonName: e.target.value }))}
+                      onChange={(e) =>
+                        setConfig((p) => ({
+                          ...p,
+                          addonName: e.target.value,
+                          bpHeaderUuid: generateUuidV4(),
+                          bpModuleUuid: generateUuidV4(),
+                          bpScriptUuid: generateUuidV4(),
+                          rpHeaderUuid: generateUuidV4(),
+                          rpModuleUuid: generateUuidV4(),
+                        }))
+                      }
                       className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-md text-sm text-white focus:outline-none focus:border-emerald-500"
                     />
                   </div>
@@ -438,10 +497,9 @@ export default function App() {
                       }}
                       className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-md text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
                     >
-                      <option value="1.21.70">Universal 26.60.29 ([1, 21, 70])</option>
-                      <option value="26.60.29">Estrito 26.60.29 ([26, 60, 29])</option>
-                      <option value="1.26.60">Formato 1.26.60 ([1, 26, 60])</option>
-                      <option value="1.21.0">Base 1.21.0 ([1, 21, 0])</option>
+                      <option value="1.21.0">Universal [1, 21, 0] (Recomendado - Bedrock 26.60.29 / 1.21.x)</option>
+                      <option value="1.21.50">Estável 1.21.50 ([1, 21, 50])</option>
+                      <option value="1.20.80">Compatibilidade Ampla ([1, 20, 80])</option>
                     </select>
                   </div>
 
@@ -451,15 +509,16 @@ export default function App() {
                     </label>
                     <select
                       value={config.serverApiVersion}
-                      onChange={(e) =>
-                        setConfig((p) => ({ ...p, serverApiVersion: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        const newVer = e.target.value;
+                        const newUi = newVer === '2.11.0' ? '2.2.0' : '1.3.0';
+                        setConfig((p) => ({ ...p, serverApiVersion: newVer, serverUiVersion: newUi }));
+                      }}
                       className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-md text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
                     >
-                      <option value="1.17.0">1.17.0 (Recomendado 26.60.29)</option>
-                      <option value="1.16.0">1.16.0 (Estável)</option>
-                      <option value="1.15.0">1.15.0 (Estável)</option>
-                      <option value="1.14.0">1.14.0 (Alta Compatibilidade)</option>
+                      <option value="1.14.0">1.14.0 (Recomendado - Estável Oficial Bedrock 1.21.x / 26.60)</option>
+                      <option value="1.16.0">1.16.0 (Bedrock 1.21.50 - 1.21.60)</option>
+                      <option value="1.13.0">1.13.0 (Bedrock 1.21.0 Legado)</option>
                     </select>
                   </div>
                 </div>
@@ -467,7 +526,7 @@ export default function App() {
                 <div className="pt-2 space-y-2">
                   <label className="flex items-center justify-between py-1.5 cursor-pointer">
                     <span className="text-slate-300">
-                      Entregar Grimório automaticamente ao entrar no mundo
+                      Entregar Item do Menu Cheat no inventário ao entrar no mundo (Slot 0 / Hotbar)
                     </span>
                     <input
                       type="checkbox"
@@ -715,6 +774,7 @@ export default function App() {
                   { id: 'rp_manifest', label: 'RP/manifest.json' },
                   { id: 'item_json', label: 'BP/items/survival_menu.json' },
                   { id: 'recipe_json', label: 'BP/recipes/survival_menu_recipe.json' },
+                  { id: 'master_prompt', label: 'PROMPT MESTRE (IA / DEV)', isSpecial: true },
                 ] as const
               ).map((tab) => (
                 <button
@@ -723,11 +783,19 @@ export default function App() {
                   onClick={() => setActiveFileTab(tab.id)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                     activeFileTab === tab.id
-                      ? 'bg-slate-800 text-emerald-400 border border-slate-700'
-                      : 'text-slate-400 hover:text-white'
+                      ? tab.id === 'master_prompt'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        : 'bg-slate-800 text-emerald-400 border border-slate-700'
+                      : tab.id === 'master_prompt'
+                        ? 'text-amber-400/90 hover:text-amber-300'
+                        : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <FileCode className="w-3.5 h-3.5" />
+                  {'isSpecial' in tab && tab.isSpecial ? (
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  ) : (
+                    <FileCode className="w-3.5 h-3.5" />
+                  )}
                   {tab.label}
                 </button>
               ))}
@@ -753,14 +821,44 @@ export default function App() {
               </h2>
             </div>
 
-            <button
-              type="button"
-              onClick={handleDownloadAddon}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              Baixar .MCADDON Verificado
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleDownloadAddon}
+                disabled={isExporting}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-md shadow-emerald-950/40"
+              >
+                <Download className="w-4 h-4" />
+                Baixar .MCADDON Completo
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDownloadPack('bp')}
+                disabled={isExporting}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-mono text-slate-200 bg-slate-800 hover:bg-slate-700 border border-emerald-500/40 rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                BP (.mcpack)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDownloadPack('rp')}
+                disabled={isExporting}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-mono text-slate-200 bg-slate-800 hover:bg-slate-700 border border-sky-500/40 rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-sky-400" />
+                RP (.mcpack)
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadManualZip}
+                disabled={isExporting}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-mono text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <FolderArchive className="w-3.5 h-3.5 text-amber-400" />
+                Pastas ZIP
+              </button>
+            </div>
           </div>
 
           {/* 6-Point Technical Audit Matrix */}
