@@ -6,8 +6,12 @@ import {
   MEGA_POTION_HALL_30_CHESTS,
   MEGA_ENCHANT_HALL_42_BOOKS,
   MEGA_ENCHANT_HALL_18_SUPPLIES,
+  SURVIVAL_KITS_CATALOG,
+  EXACT_PHOTO_KIT_54_SLOTS,
+  MEGA_STORAGE_COLUMNS_16,
 } from '../utils/addonGenerator';
-import { RotateCcw, Terminal, Check, ShieldCheck, Keyboard, Compass } from 'lucide-react';
+import { ShulkerContentItem } from '../utils/storageColumnsSpecs';
+import { RotateCcw, Terminal, Check, ShieldCheck, Keyboard, Compass, Box, Package, ExternalLink, X } from 'lucide-react';
 
 interface BedrockSimulatorProps {
   config: AddonConfig;
@@ -16,6 +20,8 @@ interface BedrockSimulatorProps {
 
 type SimMenuScreen =
   | 'main'
+  | 'kits_center'
+  | 'columns_storage_hall'
   | 'super_tools'
   | 'enchant_villager_hall'
   | 'armor_keypad'
@@ -74,7 +80,8 @@ const BEDROCK_CATALOG_SAMPLE = [
 ];
 
 export const BedrockSimulator: React.FC<BedrockSimulatorProps> = ({ config, modules }) => {
-  const [screen, setScreen] = useState<SimMenuScreen>('super_tools');
+  const [screen, setScreen] = useState<SimMenuScreen>('kits_center');
+  const [selectedKitIdx, setSelectedKitIdx] = useState<number>(0);
   const [selectedSlotIdx, setSelectedSlotIdx] = useState<number>(1);
   const [multiplyQtySlider, setMultiplyQtySlider] = useState<number>(64);
   const [multiplyQtyCustom, setMultiplyQtyCustom] = useState<string>('640');
@@ -106,6 +113,9 @@ export const BedrockSimulator: React.FC<BedrockSimulatorProps> = ({ config, modu
   const [selectedArchId, setSelectedArchId] = useState<string>('quartzo_moderno');
   const [lookDirection, setLookDirection] = useState<'Leste (+X)' | 'Oeste (-X)' | 'Sul (+Z)' | 'Norte (-Z)'>('Leste (+X)');
   const [showPotion30Preview, setShowPotion30Preview] = useState<boolean>(false);
+  const [showKits20GalleryPreview, setShowKits20GalleryPreview] = useState<boolean>(true);
+  const [showColumns16Preview, setShowColumns16Preview] = useState<boolean>(true);
+  const [selectedColumnPreviewIdx, setSelectedColumnPreviewIdx] = useState<number>(0);
   const [enchantHallTab, setEnchantHallTab] = useState<'villagers_42' | 'books_42' | 'supplies_18'>('villagers_42');
   const [lastShulkerBoxInfo, setLastShulkerBoxInfo] = useState<{
     shulkerBlock: string;
@@ -113,6 +123,22 @@ export const BedrockSimulator: React.FC<BedrockSimulatorProps> = ({ config, modu
     itemName: string;
     totalUnits: number;
   } | null>(null);
+
+  const [inspectedShulkerChest, setInspectedShulkerChest] = useState<{
+    colTitle: string;
+    lvlNum: number;
+    lvlName: string;
+    chestSide: 'Esquerdo (#1)' | 'Direito (#2)';
+    signTitle: string;
+    shulkerBoxName: string;
+    shulkerBoxColor: string;
+    shulkerCode?: string;
+    shulkerItems: ShulkerContentItem[];
+    rawItems64x: string[];
+  } | null>(null);
+  const [shulkerModalTab, setShulkerModalTab] = useState<'shulker_27' | 'chest_54'>('shulker_27');
+  const [columnSearchQuery, setColumnSearchQuery] = useState<string>('');
+  const [placedShulkerGroundToast, setPlacedShulkerGroundToast] = useState<string | null>(null);
 
   // Armor Builder state
   const [armorMaterial, setArmorMaterial] = useState('Netherita');
@@ -424,6 +450,28 @@ export const BedrockSimulator: React.FC<BedrockSimulatorProps> = ({ config, modu
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
+            onClick={() => setScreen('columns_storage_hall')}
+            className={`px-3 py-1.5 text-xs font-mono rounded border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              screen === 'columns_storage_hall'
+                ? 'bg-purple-600 text-white border-purple-400 font-semibold shadow-md'
+                : 'bg-slate-900 text-purple-300 border-purple-500/50 hover:text-white'
+            }`}
+          >
+            [🏛️ Mega Armazém 16 Colunas × 10 Nv (320 Baús c/ Shulkers)]
+          </button>
+          <button
+            type="button"
+            onClick={() => setScreen('kits_center')}
+            className={`px-3 py-1.5 text-xs font-mono rounded border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              screen === 'kits_center'
+                ? 'bg-amber-600 text-white border-amber-400 font-semibold'
+                : 'bg-slate-900 text-amber-300 border-amber-500/50 hover:text-white'
+            }`}
+          >
+            [📦 Central de 20 Kits + Kit da Foto 📸]
+          </button>
+          <button
+            type="button"
             onClick={() => setScreen('enchant_villager_hall')}
             className={`px-3 py-1.5 text-xs font-mono rounded border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
               screen === 'enchant_villager_hall'
@@ -513,6 +561,7 @@ export const BedrockSimulator: React.FC<BedrockSimulatorProps> = ({ config, modu
             <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#4a4b4c]">
               <span className="font-mono text-sm font-semibold text-emerald-400 tracking-wide">
                 {screen === 'main' && `${config.addonName} v${config.targetBuildVersion}`}
+                {screen === 'kits_center' && `Central de 20 Kits Survival & Farms (Kit #1 Idêntico à Foto) · Olhar: ${lookDirection}`}
                 {screen === 'enchant_villager_hall' && `Mega Sala de Encantamentos + 42 Villagers (1 Esmeralda) · Olhar: ${lookDirection}`}
                 {screen === 'super_tools' && 'Super Ferramentas: 50x50, Chunk 16x16, Bedrock & Baús Automáticos'}
                 {screen === 'armor_keypad' && 'Teclado: Armaduras, Ferramentas & Encantamentos'}
@@ -556,6 +605,22 @@ export const BedrockSimulator: React.FC<BedrockSimulatorProps> = ({ config, modu
                 <p className="text-xs text-slate-300 mb-2.5 font-mono">
                   Modo Sobrevivência | Direção do Olhar: <strong className="text-sky-300">{lookDirection}</strong> · Escolha uma categoria:
                 </p>
+
+                <button
+                  type="button"
+                  onClick={() => setScreen('kits_center')}
+                  className="w-full text-left px-3.5 py-2.5 bg-amber-950/85 hover:bg-amber-900/80 border border-amber-400/70 rounded flex items-center justify-between transition-colors cursor-pointer"
+                >
+                  <div>
+                    <div className="text-sm font-bold text-amber-300">
+                      📦 Central de 20 Kits Survival & Farms (Kit #1 Idêntico à Foto 📸)
+                    </div>
+                    <div className="text-xs text-slate-200">
+                      Large Chest 54 Slots idêntico à foto (Farm de Ouro/XP + Trident Killer) + 19 Kits Completos em Baú Duplo ou Shulker!
+                    </div>
+                  </div>
+                  <span className="text-xs font-mono text-amber-300 whitespace-nowrap shrink-0">20 Kits ›</span>
+                </button>
 
                 <button
                   type="button"
@@ -684,6 +749,838 @@ export const BedrockSimulator: React.FC<BedrockSimulatorProps> = ({ config, modu
                   </div>
                   <span className="text-xs font-mono text-slate-300 whitespace-nowrap shrink-0">Teleporte ›</span>
                 </button>
+              </div>
+            )}
+
+            {/* SCREEN: 16 COLUNAS DE ARMAZENAMENTO VERTICAL (10 NÍVEIS × 2 BAÚS DUPLOS = 320 BAÚS) */}
+            {screen === 'columns_storage_hall' && (
+              <div className="space-y-3 font-mono text-xs">
+                {/* Header Banner */}
+                <div className="p-3 bg-purple-950/60 border border-purple-500/70 rounded-lg space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-bold text-purple-200 flex items-center gap-2">
+                        <span>🏛️ Nova Sala de Armazenamento: 16 Colunas Verticais × 10 Níveis c/ Shulkers</span>
+                        <span className="px-2 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-500/50 rounded text-[10px]">
+                          Padrão Obrigatório Atendido
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-200 mt-0.5">
+                        Construção orientada na direção <strong>{lookDirection}</strong> com estilo <strong>{currentArchModel.shortName}</strong>. 
+                        Cada coluna possui <strong>exatamente 10 níveis de altura</strong> com <strong>2 baús duplos lado a lado por nível</strong> (20 baús duplos por coluna = <strong>320 baús duplos conectados</strong> com ar livre para abrir + Shulker Boxes cheias + passarelas + escadas verticais).
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary Badges */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <span className="px-2 py-0.5 bg-[#1e1e1f] border border-purple-400/40 rounded text-[10px] text-purple-300">
+                      🧱 16 Colunas Especializadas
+                    </span>
+                    <span className="px-2 py-0.5 bg-[#1e1e1f] border border-amber-400/40 rounded text-[10px] text-amber-300">
+                      📏 10 Níveis de Altura Exatos por Coluna
+                    </span>
+                    <span className="px-2 py-0.5 bg-[#1e1e1f] border border-sky-400/40 rounded text-[10px] text-sky-300">
+                      📦 2 Baús Duplos Lado a Lado por Nível (20/Coluna)
+                    </span>
+                    <span className="px-2 py-0.5 bg-[#1e1e1f] border border-emerald-400/40 rounded text-[10px] text-emerald-300">
+                      💎 320 Baús Duplos Conectados (17.280 Slots)
+                    </span>
+                    <span className="px-2 py-0.5 bg-[#1e1e1f] border border-fuchsia-400/40 rounded text-[10px] text-fuchsia-300">
+                      🎒 Shulker Boxes Coloridas Cheias + Packs 64x
+                    </span>
+                  </div>
+
+                  {/* Search Across All 320 Chests & Shulker Boxes */}
+                  <div className="pt-1">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={columnSearchQuery}
+                        onChange={(e) => setColumnSearchQuery(e.target.value)}
+                        placeholder="🔎 Buscar item em todas as 16 Colunas / 320 Shulker Boxes (ex: Netherita, Tufo, Clava, Cobre, Totem, Molde...)"
+                        className="flex-1 bg-[#141516] border border-purple-400/50 focus:border-purple-300 rounded px-2.5 py-1.5 text-xs text-white placeholder-slate-400 outline-none"
+                      />
+                      {columnSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setColumnSearchQuery('')}
+                          className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-bold cursor-pointer"
+                        >
+                          Limpar Busca
+                        </button>
+                      )}
+                    </div>
+
+                    {columnSearchQuery.trim().length > 0 && (() => {
+                      const q = columnSearchQuery.trim().toLowerCase();
+                      const matches: {
+                        colIdx: number;
+                        colNum: number;
+                        colName: string;
+                        lvlNum: number;
+                        lvlName: string;
+                        side: 'Esquerdo (#1)' | 'Direito (#2)';
+                        chest: typeof MEGA_STORAGE_COLUMNS_16[0]['levels'][0]['chestLeft'];
+                      }[] = [];
+
+                      MEGA_STORAGE_COLUMNS_16.forEach((col, cIdx) => {
+                        col.levels.forEach((lvl) => {
+                          [
+                            { side: 'Esquerdo (#1)' as const, chest: lvl.chestLeft },
+                            { side: 'Direito (#2)' as const, chest: lvl.chestRight },
+                          ].forEach(({ side, chest }) => {
+                            const hay = [
+                              col.name,
+                              lvl.name,
+                              chest.signTitle,
+                              chest.subcategory,
+                              chest.shulkerBoxName,
+                              ...chest.shulkerItems.map((i) => `${i.name || ''} ${i.id}`),
+                            ]
+                              .join(' ')
+                              .toLowerCase();
+                            if (hay.includes(q)) {
+                              matches.push({
+                                colIdx: cIdx,
+                                colNum: col.index,
+                                colName: col.name,
+                                lvlNum: lvl.level,
+                                lvlName: lvl.name,
+                                side,
+                                chest,
+                              });
+                            }
+                          });
+                        });
+                      });
+
+                      return (
+                        <div className="mt-2 p-2 bg-[#161718] border border-emerald-500/40 rounded space-y-1.5 max-h-48 overflow-y-auto">
+                          <div className="text-[10px] font-bold text-emerald-300">
+                            Encontrados {matches.length} Baús Duplos / Shulkers 27/27 para "{columnSearchQuery}":
+                          </div>
+                          {matches.length === 0 ? (
+                            <div className="text-[11px] text-slate-400">
+                              Nenhum item encontrado com esse termo. Tente "Netherita", "Cobre", "Redstone", "Poção" ou "Molde".
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                              {matches.slice(0, 16).map((m, mIdx) => (
+                                <button
+                                  key={mIdx}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedColumnPreviewIdx(m.colIdx);
+                                    setInspectedShulkerChest({
+                                      colTitle: m.colName,
+                                      lvlNum: m.lvlNum,
+                                      lvlName: m.lvlName,
+                                      chestSide: m.side,
+                                      signTitle: m.chest.signTitle,
+                                      shulkerBoxName: m.chest.shulkerBoxName,
+                                      shulkerBoxColor: m.chest.shulkerBoxColor,
+                                      shulkerCode: m.chest.shulkerCode,
+                                      shulkerItems: m.chest.shulkerItems,
+                                      rawItems64x: m.chest.rawItems64x,
+                                    });
+                                    setShulkerModalTab('shulker_27');
+                                  }}
+                                  className="p-1.5 bg-[#222325] hover:bg-purple-950/50 border border-slate-700 hover:border-purple-400 rounded text-left flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                                >
+                                  <div className="truncate">
+                                    <div className="text-[10px] font-bold text-amber-300 truncate">
+                                      Col #{String(m.colNum).padStart(2, '0')} · Nv.{m.lvlNum}/10 · {m.chest.signTitle}
+                                    </div>
+                                    <div className="text-[9px] text-slate-300 truncate">
+                                      {m.chest.shulkerBoxName} (27/27 Slots)
+                                    </div>
+                                  </div>
+                                  <span className="px-1.5 py-0.5 bg-purple-900/80 text-purple-200 rounded text-[9px] font-bold shrink-0">
+                                    Abrir 27 Slots
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        pushLog(
+                          `[🏛️ Mega Sala de Shulker Boxes (${lookDirection}) - ${currentArchModel.shortName}] Construído o Corredor Central onde a 1ª Coluna de 10 Baús Duplos (Nv. 1 a 10) tem o Item #1 em todos os 10 baús, a 2ª Coluna de 10 Baús tem o Item #2 em todos os 10 baús, e assim por diante até completar todas as 320 Colunas (3.200 Baús Duplos virados para o corredor central)!`,
+                          'purple'
+                        );
+                      }}
+                      className="py-2 px-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded text-xs cursor-pointer transition-colors shadow flex items-center justify-center gap-1.5"
+                    >
+                      <span>🏛️ Salão Completo (10 Baús Iguais/Coluna)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const col = MEGA_STORAGE_COLUMNS_16[selectedColumnPreviewIdx];
+                        pushLog(
+                          `[🏗️ Corredor da Categoria #${col.index} (${lookDirection})] Geradas as 20 Colunas Verticais de 10 Baús Duplos Iguais (${col.name} = 200 Baús Duplos virados para o corredor central), onde cada coluna de 10 baús tem o mesmo item do Nível 1 ao 10!`,
+                          'amber'
+                        );
+                      }}
+                      className="py-2 px-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded text-xs cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <span>🏗️ Gerar 20 Colunas de 10 Baús (#{MEGA_STORAGE_COLUMNS_16[selectedColumnPreviewIdx]?.index})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const col = MEGA_STORAGE_COLUMNS_16[selectedColumnPreviewIdx];
+                        const sampleLvl = col.levels[0];
+                        setPlayerState((s) => ({
+                          ...s,
+                          inventory: [
+                            s.inventory[0],
+                            {
+                              id: sampleLvl.chestLeft.shulkerBoxColor,
+                              name: `🎒 [SHULKER 27/27] ${sampleLvl.chestLeft.shulkerBoxName}`,
+                              count: 1,
+                              lore: `ID:${sampleLvl.chestLeft.shulkerCode || 'SHULKER_C01_L01_1'} · Coloque no chão p/ autopreencher 27/27 slots!`,
+                            },
+                            {
+                              id: sampleLvl.chestRight.shulkerBoxColor,
+                              name: `🎒 [SHULKER 27/27] ${sampleLvl.chestRight.shulkerBoxName}`,
+                              count: 1,
+                              lore: `ID:${sampleLvl.chestRight.shulkerCode || 'SHULKER_C01_L01_2'} · Coloque no chão p/ autopreencher 27/27 slots!`,
+                            },
+                            ...s.inventory.slice(1, 5),
+                          ],
+                        }));
+                        pushLog(
+                          `[🎒 Shulkers 27/27 da Categoria #${col.index}] Entregues 2 Caixas de Shulker 100% lotadas (27/27 slots do mesmo item) no inventário (${sampleLvl.chestLeft.shulkerBoxName} & ${sampleLvl.chestRight.shulkerBoxName})!`,
+                          'emerald'
+                        );
+                      }}
+                      className="py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <span>🎒 Pegar Shulkers 27/27 no Inventário</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Column Selector Grid */}
+                <div className="p-3 bg-[#242526] border border-purple-500/40 rounded space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-purple-300 font-bold">
+                      Selecione uma das 16 Categorias (20 Colunas de 10 Baús Iguais por Categoria = 320 Colunas de 10 Baús):
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Categoria #{MEGA_STORAGE_COLUMNS_16[selectedColumnPreviewIdx]?.index} de 16
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1.5">
+                    {MEGA_STORAGE_COLUMNS_16.map((col, idx) => {
+                      const isSel = selectedColumnPreviewIdx === idx;
+                      return (
+                        <button
+                          key={col.index}
+                          type="button"
+                          onClick={() => {
+                            setSelectedColumnPreviewIdx(idx);
+                            pushLog(
+                              `[Categoria #${col.index}] Selecionada: ${col.name}. Exibindo as 20 Colunas Verticais de 10 Baús Duplos Iguais (Nível 1 a 10 com o mesmo item em todos os 10 baús)!`,
+                              'sky'
+                            );
+                          }}
+                          className={`p-2 rounded text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                            isSel
+                              ? 'bg-purple-950/90 border-purple-400 text-white shadow-md'
+                              : 'bg-[#1a1b1c] hover:bg-[#2c2d2e] border-slate-700 text-slate-300'
+                          }`}
+                        >
+                          <div className="text-[10px] font-bold text-amber-300 flex items-center justify-between">
+                            <span>#{String(col.index).padStart(2, '0')}</span>
+                            <span className="text-[8px] px-1 bg-purple-900/80 text-purple-200 rounded">20 Cols</span>
+                          </div>
+                          <div className="text-[11px] font-semibold truncate text-slate-200">
+                            {col.shortSign}
+                          </div>
+                          <div className="text-[9px] text-emerald-400 truncate mt-0.5">
+                            10 Baús Iguais/Item
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Selected Category Detailed Inspector (20 Vertical Columns of 10 Identical Double Chests) */}
+                {(() => {
+                  const activeCol = MEGA_STORAGE_COLUMNS_16[selectedColumnPreviewIdx] || MEGA_STORAGE_COLUMNS_16[0];
+                  const baseColOffset = ((activeCol.index || 1) - 1) * 20;
+                  return (
+                    <div className="p-3 bg-[#1e1e1f] border border-purple-500/40 rounded-lg space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-2">
+                        <div>
+                          <div className="text-sm font-bold text-amber-300">
+                            Categoria #{String(activeCol.index).padStart(2, '0')}: {activeCol.name} (Colunas #{String(baseColOffset + 1).padStart(3, '0')} a #{String(baseColOffset + 20).padStart(3, '0')})
+                          </div>
+                          <div className="text-[11px] text-slate-300">
+                            Regra Exata: <span className="text-emerald-300 font-bold">1ª Coluna de 10 Baús = Item #{baseColOffset + 1}</span> · <span className="text-sky-300 font-bold">2ª Coluna de 10 Baús = Item #{baseColOffset + 2}</span> · <span className="text-fuchsia-300">Todos os 10 Baús da coluna têm 54 Shulkers 27/27 do MESMO Item!</span>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 bg-purple-950/80 border border-purple-400/50 rounded text-[11px] text-purple-200 font-bold">
+                          20 Colunas × 10 Baús Iguais = 200 Baús Duplos
+                        </span>
+                      </div>
+
+                      {/* The 20 Vertical Columns of 10 Identical Chests (grouped 2 per card) */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-96 overflow-y-auto pr-1">
+                        {activeCol.levels.map((lvl) => {
+                          const colNumA = baseColOffset + (lvl.level - 1) * 2 + 1;
+                          const colNumB = baseColOffset + (lvl.level - 1) * 2 + 2;
+                          return (
+                            <div
+                              key={lvl.level}
+                              className="p-2.5 bg-[#252627] border border-slate-700 hover:border-purple-500/50 rounded space-y-1.5 transition-colors"
+                            >
+                              <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+                                <span className="text-amber-300 font-bold text-[11px]">
+                                  Colunas #{String(colNumA).padStart(3, '0')} & #{String(colNumB).padStart(3, '0')} — 10 Baús (Nv. 1 a 10)
+                                </span>
+                                <span className="text-[10px] text-emerald-300 font-mono truncate max-w-[180px]">
+                                  10 Baús Iguais/Coluna
+                                </span>
+                              </div>
+
+                              {/* 2 Vertical Columns of 10 Identical Double Chests */}
+                              <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                                {/* Coluna Vertical A (10 Baús Iguais) */}
+                                <div
+                                  onClick={() => {
+                                    setPlacedShulkerGroundToast(null);
+                                    setInspectedShulkerChest({
+                                      colTitle: `Coluna #${String(colNumA).padStart(3, '0')} (10 Baús Iguais) · ${activeCol.name}`,
+                                      lvlNum: lvl.level,
+                                      lvlName: 'Todos os 10 Baús Duplos (Nível 1 ao 10) têm este mesmo item',
+                                      chestSide: 'Esquerdo (#1)',
+                                      signTitle: lvl.chestLeft.signTitle,
+                                      shulkerBoxName: lvl.chestLeft.shulkerBoxName,
+                                      shulkerBoxColor: lvl.chestLeft.shulkerBoxColor,
+                                      shulkerCode: lvl.chestLeft.shulkerCode,
+                                      shulkerItems: lvl.chestLeft.shulkerItems,
+                                      rawItems64x: lvl.chestLeft.rawItems64x,
+                                    });
+                                    setShulkerModalTab('shulker_27');
+                                  }}
+                                  className="p-1.5 bg-[#191a1b] border border-purple-500/40 hover:border-purple-300 rounded space-y-1 cursor-pointer transition-all hover:bg-purple-950/25 group"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-fuchsia-300 truncate">
+                                      🏛️ Coluna #{String(colNumA).padStart(3, '0')} (10 Baús)
+                                    </span>
+                                    <span className="text-[9px] text-purple-300 font-bold group-hover:text-purple-100 flex items-center gap-0.5">
+                                      🔍 27/27
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] text-white font-bold truncate">
+                                    {lvl.chestLeft.signTitle}
+                                  </div>
+                                  <div className="text-[9px] text-emerald-400 truncate flex items-center gap-1">
+                                    <Package className="w-2.5 h-2.5 shrink-0" />
+                                    <span>10 Baús × 54 Shulkers (27/27)</span>
+                                  </div>
+                                  <div className="text-[9px] text-slate-400 line-clamp-2">
+                                    Todos os 10 baús (Nv. 1 a 10) contêm {lvl.chestLeft.signTitle}
+                                  </div>
+                                  <div className="pt-0.5 text-[8.5px] text-purple-300 underline font-sans flex items-center gap-1">
+                                    <span>Inspecionar 10 Baús & Shulker</span>
+                                  </div>
+                                </div>
+
+                                {/* Coluna Vertical B (10 Baús Iguais) */}
+                                <div
+                                  onClick={() => {
+                                    setPlacedShulkerGroundToast(null);
+                                    setInspectedShulkerChest({
+                                      colTitle: `Coluna #${String(colNumB).padStart(3, '0')} (10 Baús Iguais) · ${activeCol.name}`,
+                                      lvlNum: lvl.level,
+                                      lvlName: 'Todos os 10 Baús Duplos (Nível 1 ao 10) têm este mesmo item',
+                                      chestSide: 'Direito (#2)',
+                                      signTitle: lvl.chestRight.signTitle,
+                                      shulkerBoxName: lvl.chestRight.shulkerBoxName,
+                                      shulkerBoxColor: lvl.chestRight.shulkerBoxColor,
+                                      shulkerCode: lvl.chestRight.shulkerCode,
+                                      shulkerItems: lvl.chestRight.shulkerItems,
+                                      rawItems64x: lvl.chestRight.rawItems64x,
+                                    });
+                                    setShulkerModalTab('shulker_27');
+                                  }}
+                                  className="p-1.5 bg-[#191a1b] border border-sky-500/40 hover:border-sky-300 rounded space-y-1 cursor-pointer transition-all hover:bg-sky-950/25 group"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-sky-300 truncate">
+                                      🏛️ Coluna #{String(colNumB).padStart(3, '0')} (10 Baús)
+                                    </span>
+                                    <span className="text-[9px] text-sky-300 font-bold group-hover:text-sky-100 flex items-center gap-0.5">
+                                      🔍 27/27
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] text-white font-bold truncate">
+                                    {lvl.chestRight.signTitle}
+                                  </div>
+                                  <div className="text-[9px] text-emerald-400 truncate flex items-center gap-1">
+                                    <Package className="w-2.5 h-2.5 shrink-0" />
+                                    <span>10 Baús × 54 Shulkers (27/27)</span>
+                                  </div>
+                                  <div className="text-[9px] text-slate-400 line-clamp-2">
+                                    Todos os 10 baús (Nv. 1 a 10) contêm {lvl.chestRight.signTitle}
+                                  </div>
+                                  <div className="pt-0.5 text-[8.5px] text-sky-300 underline font-sans flex items-center gap-1">
+                                    <span>Inspecionar 10 Baús & Shulker</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Modal de Inspeção Completa da Shulker Box (27/27 Slots) e do Baú Duplo (54/54 Slots) */}
+                      {inspectedShulkerChest && (
+                        <div className="p-3 bg-[#171819] border-2 border-emerald-500/70 rounded-lg space-y-2.5 animate-in fade-in">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-2">
+                            <div>
+                              <div className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                                <Package className="w-4 h-4 text-emerald-400" />
+                                <span>
+                                  INSPEÇÃO: {inspectedShulkerChest.signTitle} ({inspectedShulkerChest.chestSide})
+                                </span>
+                                {inspectedShulkerChest.shulkerCode && (
+                                  <span className="px-1.5 py-0.5 bg-purple-950 border border-purple-400/50 rounded text-[9px] text-purple-200 font-mono">
+                                    {inspectedShulkerChest.shulkerCode}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-slate-300">
+                                {inspectedShulkerChest.colTitle} · Nível {inspectedShulkerChest.lvlNum}/10 ({inspectedShulkerChest.lvlName})
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const msg = `✅ Shulker "${inspectedShulkerChest.shulkerBoxName}" colocada no chão! O evento playerPlaceBlock detectou o código ${inspectedShulkerChest.shulkerCode || 'SHULKER_27'} e preencheu automaticamente todos os 27/27 slots do bloco no mundo!`;
+                                  setPlacedShulkerGroundToast(msg);
+                                  pushLog(
+                                    `[📦 Shulker 27/27 Colocada no Chão] ${msg}`,
+                                    'purple'
+                                  );
+                                }}
+                                className="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <span>⚡ Simular Colocar no Chão (27/27 Slots)</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const shulkerItemEntry = {
+                                    id: inspectedShulkerChest.shulkerBoxColor,
+                                    name: `🎒 [SHULKER 27/27] ${inspectedShulkerChest.shulkerBoxName}`,
+                                    count: 1,
+                                    lore: `ID:${inspectedShulkerChest.shulkerCode || 'SHULKER'} · ${inspectedShulkerChest.colTitle} (27/27 slots lotados)`,
+                                    enchantments: inspectedShulkerChest.shulkerItems
+                                      .slice(0, 3)
+                                      .map((it) => `${it.name || it.id.replace('minecraft:', '')} x${it.count}`),
+                                  };
+                                  setPlayerState((prev) => ({
+                                    ...prev,
+                                    inventory: [shulkerItemEntry, ...prev.inventory],
+                                  }));
+                                  setLogs((prev) => [
+                                    {
+                                      id: `shk-${Date.now()}`,
+                                      time: 'Agora',
+                                      text: `[Shulker 27/27 Coletada] ${inspectedShulkerChest.shulkerBoxName} com 27/27 slots lotados adicionada ao inventário!`,
+                                      tone: 'emerald',
+                                    },
+                                    ...prev,
+                                  ]);
+                                }}
+                                className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <Package className="w-3 h-3" />
+                                <span>Pegar Shulker 27/27</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setInspectedShulkerChest(null)}
+                                className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-[10px] font-bold transition-colors cursor-pointer"
+                              >
+                                ✕ Fechar
+                              </button>
+                            </div>
+                          </div>
+
+                          {placedShulkerGroundToast && (
+                            <div className="p-2 bg-purple-950/70 border border-purple-400 rounded text-[10px] text-purple-100 flex items-center justify-between">
+                              <span>{placedShulkerGroundToast}</span>
+                              <button
+                                type="button"
+                                onClick={() => setPlacedShulkerGroundToast(null)}
+                                className="text-purple-300 hover:text-white font-bold ml-2"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Seletor de visualização (Shulker Box 27 Slots vs Baú Duplo 54 Slots) */}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setShulkerModalTab('shulker_27')}
+                              className={`flex-1 py-1.5 px-2 rounded text-[11px] font-bold border transition-colors cursor-pointer ${
+                                shulkerModalTab === 'shulker_27'
+                                  ? 'bg-purple-900/60 border-purple-400 text-purple-100 shadow-sm'
+                                  : 'bg-[#212224] border-slate-700 text-slate-400 hover:text-slate-200'
+                              }`}
+                            >
+                              🎒 1. Interior da Shulker Box (27/27 Slots 100% Lotados)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShulkerModalTab('chest_54')}
+                              className={`flex-1 py-1.5 px-2 rounded text-[11px] font-bold border transition-colors cursor-pointer ${
+                                shulkerModalTab === 'chest_54'
+                                  ? 'bg-amber-900/60 border-amber-400 text-amber-100 shadow-sm'
+                                  : 'bg-[#212224] border-slate-700 text-slate-400 hover:text-slate-200'
+                              }`}
+                            >
+                              📦 2. Baú Duplo Conectado (54/54 Slots — 6 Fileiras de Shulker Boxes 27/27!)
+                            </button>
+                          </div>
+
+                          {/* TAB 1: 27 Slots da Shulker Box */}
+                          {shulkerModalTab === 'shulker_27' && (
+                            <div className="space-y-2">
+                              <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-300 bg-purple-950/40 p-1.5 rounded border border-purple-500/30">
+                                <span>
+                                  <strong>Caixa de Shulker:</strong> {inspectedShulkerChest.shulkerBoxName} ({inspectedShulkerChest.shulkerBoxColor.replace('minecraft:', '')})
+                                </span>
+                                <span className="text-emerald-300 font-bold">
+                                  ✅ 27/27 Slots com o MESMO Item dentro de todas as 54 Shulkers do Baú!
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-3 sm:grid-cols-9 gap-1 max-h-60 overflow-y-auto p-1.5 bg-[#121314] rounded border border-slate-800">
+                                {inspectedShulkerChest.shulkerItems.slice(0, 27).map((item, sIdx) => (
+                                  <div
+                                    key={sIdx}
+                                    className="p-1 bg-[#1e2022] border border-slate-700 hover:border-emerald-400 rounded flex flex-col items-center justify-between text-center min-h-[54px] transition-colors"
+                                    title={`${item.name || item.id} (x${item.count})${item.ench ? ' • ' + item.ench.map((e) => e[0] + ' ' + e[1]).join(', ') : ''}`}
+                                  >
+                                    <span className="text-[8px] text-slate-400 font-mono self-start">#{sIdx + 1}</span>
+                                    <span className="text-[9.5px] font-bold text-slate-100 line-clamp-2 px-0.5 leading-tight">
+                                      {item.name || item.id.replace('minecraft:', '')}
+                                    </span>
+                                    <div className="flex items-center gap-1 w-full justify-between mt-0.5">
+                                      {item.ench ? (
+                                        <span className="text-[7px] px-1 bg-purple-900 text-purple-200 rounded font-bold">
+                                          MAX
+                                        </span>
+                                      ) : (
+                                        <span />
+                                      )}
+                                      <span className="text-[9px] font-bold text-amber-300 tabular-nums self-end">
+                                        {item.count}x
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* TAB 2: 54 Slots do Baú Duplo (Large Chest) */}
+                          {shulkerModalTab === 'chest_54' && (
+                            <div className="space-y-2">
+                              <div className="text-[10px] text-slate-300 bg-amber-950/40 p-1.5 rounded border border-amber-500/30">
+                                <strong>Hierarquia Real: Sala ➔ Baú Duplo (54 Slots) ➔ 54 Shulker Boxes Iguais ➔ 27 Slots do MESMO Item dentro de cada Shulker!</strong> Todas as <strong>54 Shulker Boxes deste Baú Duplo</strong> vêm recheadas com <strong>27/27 slots de {inspectedShulkerChest.shulkerItems[0]?.name || 'um único item'}</strong>. Clique em qualquer Shulker abaixo para ver os 27 slots idênticos dentro dela:
+                              </div>
+
+                              <div className="grid grid-cols-6 sm:grid-cols-9 gap-1 max-h-60 overflow-y-auto p-1.5 bg-[#121314] rounded border border-slate-800">
+                                {/* Slots 0..53: Todas as 6 fileiras (54 Caixas de Shulker 27/27) */}
+                                {Array.from({ length: 54 }).map((_, shkIdx) => (
+                                  <div
+                                    key={`shk-slot-${shkIdx}`}
+                                    onClick={() => setShulkerModalTab('shulker_27')}
+                                    title="Clique para abrir esta Shulker Box e ver os 27 itens que estão dentro dela!"
+                                    className={`p-1 border-2 rounded flex flex-col items-center justify-between text-center min-h-[52px] cursor-pointer transition-colors ${
+                                      shkIdx < 27
+                                        ? 'bg-emerald-950/80 border-emerald-400 hover:border-amber-300'
+                                        : 'bg-purple-950/80 border-purple-400 hover:border-emerald-300'
+                                    }`}
+                                  >
+                                    <span className="text-[7.5px] text-slate-200 font-mono self-start">#{shkIdx + 1}</span>
+                                    <Package className="w-3.5 h-3.5 text-amber-300" />
+                                    <span className="text-[8px] font-bold text-white leading-tight">
+                                      {shkIdx < 27 ? 'Shulker NBT 27/27' : 'Shulker Nomeada'}
+                                    </span>
+                                    <span className="text-[7.5px] text-emerald-300 font-mono">27 Itens Dentro</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* SCREEN: CENTRAL DE 20 KITS SURVIVAL & FARMS (KIT #1 EXATO DA FOTO) */}
+            {screen === 'kits_center' && (
+              <div className="space-y-3 font-mono text-xs">
+                <div className="p-3 bg-amber-950/40 border border-amber-500/60 rounded-lg space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-bold text-amber-300">
+                        📦 Central de 20 Kits Survival & Farms · Kit #1 Idêntico à Sua Foto 📸
+                      </div>
+                      <div className="text-[11px] text-slate-200">
+                        Gere qualquer Kit como um <strong>Baú Duplo Conectado (Large Chest de 54 Slots)</strong> na sua frente (direção <strong>{lookDirection}</strong>) com Placa Identificadora, receba em <strong>2 Caixas de Shulker + Inventário</strong>, ou construa a <strong>Galeria Completa com os 20 Kits</strong>!
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 bg-amber-950 border border-amber-400/60 rounded text-[11px] text-amber-200 font-bold">
+                      20 Kits Prontos
+                    </span>
+                  </div>
+
+                  {/* Visual Large Chest 54 Slots (9x6 Grid) of Kit #1 vs Attached Photo */}
+                  <div className="p-2.5 bg-[#1e1e1f] border border-amber-500/40 rounded space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-amber-300 font-bold">
+                        📸 Kit #1: Large Chest (54 Slots: 9×6) — Farm de Ouro e XP c/ Portal + Trident Killer:
+                      </span>
+                      <span className="text-[11px] text-emerald-300">
+                        43 Slots Preenchidos + 11 Vazios (100% Idêntico à Foto)
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 items-center">
+                      {/* Reference Image uploaded by user */}
+                      <div className="xl:col-span-5 space-y-1">
+                        <div className="text-[10px] text-slate-400">Referência enviada (Large Chest original):</div>
+                        <img
+                          src="/assets/aistudio/image_37a329bc.png"
+                          alt="Large Chest Kit Farm de Ouro e XP"
+                          className="w-full rounded border border-slate-700 object-contain max-h-48 bg-black/40"
+                        />
+                      </div>
+
+                      {/* Interactive 9x6 Large Chest Slot Grid */}
+                      <div className="xl:col-span-7 bg-[#c6c6c6] text-[#3f3f3f] p-2 rounded border-2 border-[#555555] shadow-inner">
+                        <div className="text-[11px] font-bold mb-1 text-[#373737]">
+                          Large Chest — {SURVIVAL_KITS_CATALOG[selectedKitIdx]?.shortSign || 'KIT #01'}
+                        </div>
+                        <div className="grid grid-cols-9 gap-0.5 bg-[#8b8b8b] p-1 border border-[#373737]">
+                          {Array.from({ length: 54 }).map((_, slotIdx) => {
+                            const slotItem = EXACT_PHOTO_KIT_54_SLOTS.find((s) => s.slot === slotIdx);
+                            return (
+                              <div
+                                key={slotIdx}
+                                title={
+                                  slotItem
+                                    ? `Slot ${slotIdx + 1}: ${slotItem.count}x ${slotItem.labelPt} (${slotItem.id})`
+                                    : `Slot ${slotIdx + 1}: Vazio`
+                                }
+                                className="aspect-square bg-[#8b8b8b] border-t-[#373737] border-l-[#373737] border-b-[#ffffff] border-r-[#ffffff] border flex flex-col items-center justify-center relative select-none hover:bg-[#a0a0a0] transition-colors"
+                              >
+                                {slotItem && (
+                                  <>
+                                    <span className="text-[11px] leading-none">{slotItem.shortIcon}</span>
+                                    {slotItem.count > 1 && (
+                                      <span className="absolute bottom-0 right-0.5 text-[9px] font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.95)] leading-none">
+                                        {slotItem.count}
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Action Buttons for Selected Kit */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const chosenKit = SURVIVAL_KITS_CATALOG[selectedKitIdx] || SURVIVAL_KITS_CATALOG[0];
+                          pushLog(
+                            `[Baú Duplo Conectado (${lookDirection})] Gerado 1 Large Chest (54 Slots conectados via placeConnectedDoubleChest) na sua frente com Placa [${chosenKit.shortSign}] e todos os itens de "${chosenKit.name}"!`,
+                            'emerald'
+                          );
+                        }}
+                        className="py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs cursor-pointer transition-colors"
+                      >
+                        📦 Gerar Baú Duplo (Large Chest) na Frente
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const chosenKit = SURVIVAL_KITS_CATALOG[selectedKitIdx] || SURVIVAL_KITS_CATALOG[0];
+                          setPlayerState((s) => ({
+                            ...s,
+                            inventory: [
+                              s.inventory[0],
+                              {
+                                id: 'minecraft:yellow_shulker_box',
+                                name: `Shulker #1: ${chosenKit.shortSign}`,
+                                count: 1,
+                                lore: chosenKit.summary.slice(0, 60) + '...',
+                              },
+                              {
+                                id: 'minecraft:trident',
+                                name: 'Tridente (Empalamento V, Lealdade III, Remendo)',
+                                count: 1,
+                                enchantments: ['Empalamento V', 'Lealdade III', 'Inquebrável III', 'Remendo'],
+                              },
+                              ...s.inventory.slice(1, 5),
+                            ],
+                          }));
+                          pushLog(
+                            `[Kit no Inventário + 2 Shulkers] Entregues os itens de "${chosenKit.name}" na sua mochila + 2 Caixas de Shulker portáteis na sua frente!`,
+                            'amber'
+                          );
+                        }}
+                        className="py-2 px-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded text-xs cursor-pointer transition-colors"
+                      >
+                        🎒 Receber no Inventário + 2 Shulkers
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowKits20GalleryPreview(true);
+                          pushLog(
+                            `[🏛️ Sala Galeria de Todos os 20 Kits (${lookDirection})] Construído Salão Iluminado (5 Baias × 4 Baús Duplos em y=0 e y=2 com ar livre acima) no estilo ${currentArchModel.shortName} com os 20 Baús Duplos Conectados + Placas Frontais [KIT #01 a #20]!`,
+                            'purple'
+                          );
+                        }}
+                        className="py-2 px-3 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold rounded text-xs cursor-pointer transition-colors"
+                      >
+                        🏛️ Construir Galeria c/ Todos os 20 Kits
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Interactive 5-Bay Gallery Preview (20 Connected Double Chests) */}
+                  {showKits20GalleryPreview && (
+                    <div className="p-2.5 bg-[#191a1b] border border-fuchsia-500/50 rounded space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-fuchsia-300 font-bold">
+                          🏛️ Planta da Sala Galeria gerada na direção {lookDirection} (5 Baias × 4 Large Chests = 20 Kits):
+                        </span>
+                        <span className="text-[10px] text-emerald-300 bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-500/40">
+                          ✔ Todos os 20 Baús Duplos Conectados (y=0 e y=2 c/ ar livre p/ abrir!)
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-5 gap-1.5">
+                        {[0, 1, 2, 3, 4].map((bayIdx) => {
+                          const bayKits = SURVIVAL_KITS_CATALOG.slice(bayIdx * 4, bayIdx * 4 + 4);
+                          return (
+                            <div
+                              key={bayIdx}
+                              className="p-2 bg-[#242526] border border-fuchsia-500/30 rounded space-y-1"
+                            >
+                              <div className="text-[10px] font-bold text-fuchsia-300 border-b border-slate-700 pb-0.5">
+                                Baia #{bayIdx + 1} (f={5 + bayIdx * 3}..{7 + bayIdx * 3})
+                              </div>
+                              {bayKits.map((bk, subIdx) => (
+                                <button
+                                  key={bk.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedKitIdx(bk.index - 1);
+                                    pushLog(
+                                      `[Galeria Baia #${bayIdx + 1}] Inspecionando Baú Duplo Conectado [KIT #${String(bk.index).padStart(2, '0')} - ${bk.shortSign}] (${subIdx % 2 === 0 ? 'Parede Esquerda r=-3' : 'Parede Direita r=+3'}, y=${subIdx < 2 ? 0 : 2})!`,
+                                      'emerald'
+                                    );
+                                  }}
+                                  className="w-full text-left px-1.5 py-1 bg-[#141516] hover:bg-fuchsia-950/60 border border-slate-700 rounded text-[10px] truncate cursor-pointer transition-colors"
+                                >
+                                  <span className="text-amber-300 font-bold">#{String(bk.index).padStart(2, '0')}</span>{' '}
+                                  <span className="text-slate-200">{bk.shortSign}</span>
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* All 20 Kits Selector List */}
+                <div className="p-3 bg-[#242526] border border-amber-500/40 rounded space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-amber-300 font-bold">
+                      Catálogo Completo — Clique em qualquer um dos 20 Kits para usar:
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Selecionado: #{SURVIVAL_KITS_CATALOG[selectedKitIdx]?.index}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-72 overflow-y-auto pr-1">
+                    {SURVIVAL_KITS_CATALOG.map((kit, idx) => {
+                      const isSel = selectedKitIdx === idx;
+                      return (
+                        <button
+                          key={kit.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedKitIdx(idx);
+                            pushLog(
+                              `[Central de Kits] Selecionado ${kit.name} — Placa: [${kit.shortSign}]. Clique em "Gerar Baú Duplo na Frente" ou "Receber no Inventário"!`,
+                              'sky'
+                            );
+                          }}
+                          className={`p-2.5 rounded text-left border transition-colors cursor-pointer flex flex-col justify-between gap-1.5 ${
+                            isSel
+                              ? 'bg-amber-950/70 border-amber-400 text-white'
+                              : 'bg-[#1a1b1c] hover:bg-[#2c2d2e] border-slate-700 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-bold text-amber-300 leading-snug">
+                              {kit.name}
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-amber-900/60 border border-amber-400/40 text-amber-200 rounded text-[9px] font-bold shrink-0">
+                              {kit.badge}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-300 leading-relaxed">
+                            {kit.highlights.slice(0, 2).join(' · ')}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -2579,6 +3476,28 @@ export const BedrockSimulator: React.FC<BedrockSimulatorProps> = ({ config, modu
                       );
                     })}
                   </div>
+                </div>
+
+                {/* NOVA SALA: 16 COLUNAS VERTICAIS × 10 NÍVEIS C/ SHULKERS BANNER */}
+                <div className="p-3 bg-purple-950/70 border border-purple-500/70 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
+                  <div>
+                    <div className="text-sm font-bold text-purple-200 flex items-center gap-1.5">
+                      <span>🏛️ [NOVA SALA] Mega Armazém: 16 Colunas × 10 Níveis c/ Shulkers</span>
+                      <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-500/40 rounded text-[9px] font-bold">
+                        320 Baús Duplos
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-200 mt-0.5">
+                      Direção <strong>{lookDirection}</strong>: 16 Colunas, 10 níveis exatos por coluna, 2 baús duplos por nível (20/coluna), Shulkers cheias + Packs 64x + passarelas!
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setScreen('columns_storage_hall')}
+                    className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded text-xs cursor-pointer shrink-0 shadow flex items-center gap-1"
+                  >
+                    <span>Explorar 16 Colunas ›</span>
+                  </button>
                 </div>
 
                 {/* MEGA SALA DE ENCANTAMENTOS + 42 VILLAGERS (1 ESMERALDA) BANNER */}

@@ -1,10 +1,25 @@
 import JSZip from 'jszip';
 import {
+  type ImportedMcStructure,
+  parseUploadedDesktopFiles,
+  downloadSingleMcStructureFile,
+  createStarterMcStructureSamples,
+} from './mcstructureParser';
+import {
   ARCHITECTURAL_MODELS,
   MEGA_POTION_HALL_30_CHESTS,
   MEGA_ENCHANT_HALL_42_BOOKS,
   MEGA_ENCHANT_HALL_18_SUPPLIES,
+  SURVIVAL_KITS_CATALOG,
+  EXACT_PHOTO_KIT_54_SLOTS,
+  MEGA_STORAGE_COLUMNS_16,
   type EnchantedBookChestSpec,
+  type SurvivalKitSpec,
+  type SurvivalKitSlotSpec,
+  type StorageColumnSpec,
+  type ColumnLevelSpec,
+  type ColumnDoubleChestSpec,
+  type ShulkerContentItem,
   generateMartelo50x50ItemJson,
   generateDestruidorChunkItemJson,
   generateQuebradorBedrockItemJson,
@@ -17,11 +32,24 @@ import {
 } from './superToolsAndThemes';
 
 export {
+  type ImportedMcStructure,
+  parseUploadedDesktopFiles,
+  downloadSingleMcStructureFile,
+  createStarterMcStructureSamples,
   ARCHITECTURAL_MODELS,
   MEGA_POTION_HALL_30_CHESTS,
   MEGA_ENCHANT_HALL_42_BOOKS,
   MEGA_ENCHANT_HALL_18_SUPPLIES,
+  SURVIVAL_KITS_CATALOG,
+  EXACT_PHOTO_KIT_54_SLOTS,
+  MEGA_STORAGE_COLUMNS_16,
   type EnchantedBookChestSpec,
+  type SurvivalKitSpec,
+  type SurvivalKitSlotSpec,
+  type StorageColumnSpec,
+  type ColumnLevelSpec,
+  type ColumnDoubleChestSpec,
+  type ShulkerContentItem,
   generateMartelo50x50ItemJson,
   generateDestruidorChunkItemJson,
   generateQuebradorBedrockItemJson,
@@ -138,6 +166,16 @@ export function runAddonTechnicalAudit(config: AddonConfig): AuditCheckItem[] {
 }
 
 export const INITIAL_MODULES: CheatModule[] = [
+  {
+    id: 'survival_and_farm_kits_20',
+    name: 'Central de 20 Kits Survival & Farms (Incluindo o Kit #1 Exato da Foto: Farm de Ouro e XP + Trident Killer)',
+    category: 'items',
+    description:
+      'Menu dedicado com 20 Kits Completos de Survival, Farms Automáticas, Redstone, PvP, Mineração e Bosses! O Kit #1 reproduz slot por slot exatamente o Baú Duplo (Large Chest de 43 slots) da sua foto (Farm de Ouro e XP c/ Portal + Trident Killer: 896 Pedras, 128 Vidros, 2 Lavas, 304 Obsidianas, 4 Neves Fofas, 8 Pistões, 8 Observadores, 8 Bancadas, 4 Baús, 6 Funis, 4 Ejetores, 1 Tridente, 2 Águas, 128 Lajes, Comparador, 2 Repetidores, 16 Tochas Redstone, 32 Redstones e 2 Alavancas). Gere em Baú Duplo Conectado na sua frente, em Shulker Boxes ou construa a Galeria com todos os 20 Kits!',
+    apiMethod: 'openKitsCenterMenu(player) + spawnKitInConnectedDoubleChest() + buildAll20KitsMegaGallery()',
+    enabled: true,
+    achievementSafe: true,
+  },
   {
     id: 'mega_enchantment_villager_hall',
     name: 'Mega Sala de Encantamentos + 42 Villagers no Máximo (1 Esmeralda) + Construção Direcional 360°',
@@ -514,7 +552,11 @@ export function generateCustomRecipeJson(): string {
   );
 }
 
-export function generateMainScript(config: AddonConfig, modules: CheatModule[]): string {
+export function generateMainScript(
+  config: AddonConfig,
+  modules: CheatModule[],
+  _importedStructures: ImportedMcStructure[] = []
+): string {
   const isEnabled = (id: string) => modules.find((m) => m.id === id)?.enabled ?? false;
 
   const triggerCondition =
@@ -952,6 +994,7 @@ function openMainMenu(player) {
       \`§7Direção atual do olhar p/ Construções: §b\${basis.dirLabelPt}\\n\` +
       "§eAtalho: Olhe p/ o chão + Shift 2x abre o Teclado de Armaduras!"
     )
+    .button("§l§6Central de 20 Kits: Farm Ouro/XP (Foto) & Mais\\n§r§8Kit #1 Exato da Foto + 20 Kits em Baú Duplo ou Shulker", "textures/items/trident")
     .button("§l§6Teclado: Armaduras, 5 Shulkers & Encantar\\n§r§8Todos os sets + 18 Moldes + Encantamentos", "textures/items/netherite_chestplate")
     .button("§l§cSuper Ferramentas: 50x50, Chunk & Bedrock\\n§r§8Martelo 50x50 + Chunk 16x16 + Bedrock + Baús Automáticos", "textures/items/netherite_pickaxe")
     .button("§l§dMega Sala Encantamentos + 42 Villagers (1 Esmeralda)\\n§r§842 Baús Livros Nv.Máx + 18 Baús Insumos + 42 Villagers", "textures/items/book_enchanted")
@@ -966,33 +1009,36 @@ function openMainMenu(player) {
   showFormSafely(player, form, (res) => {
     switch (res.selection) {
       case 0:
-        openArmorToolKeypadMenu(player);
+        openKitsCenterMenu(player);
         break;
       case 1:
-        openSuperToolsMenu(player);
+        openArmorToolKeypadMenu(player);
         break;
       case 2:
-        openMegaEnchantmentHallMenu(player);
+        openSuperToolsMenu(player);
         break;
       case 3:
-        openMegaChestHallMenu(player);
+        openMegaEnchantmentHallMenu(player);
         break;
       case 4:
-        openDuplicatorMenu(player);
+        openMegaChestHallMenu(player);
         break;
       case 5:
-        openAllItemsMenu(player);
+        openDuplicatorMenu(player);
         break;
       case 6:
-        openSurvivalBuffsMenu(player);
+        openAllItemsMenu(player);
         break;
       case 7:
-        openMovementMenu(player);
+        openSurvivalBuffsMenu(player);
         break;
       case 8:
-        openBuilderAndSpawnerMenu(player);
+        openMovementMenu(player);
         break;
       case 9:
+        openBuilderAndSpawnerMenu(player);
+        break;
+      case 10:
         openWorldAndVisualCombinedMenu(player);
         break;
     }
@@ -1847,7 +1893,8 @@ function openInventorySlotPicker(player) {
 function openAllItemsMenu(player) {
   const form = new ActionFormData()
     .title("§l§bPegar Qualquer Item do Jogo")
-    .body("§7Acesse todos os 1.600+ itens do Minecraft Bedrock na quantidade que desejar:")
+    .body("§7Acesse todos os 1.600+ itens do Minecraft Bedrock ou abra a Central com 20 Kits Prontos:")
+    .button("§l§6Central de 20 Kits Survival & Farms (Kit da Foto!)\\n§r§8Kit #1 Farm de Ouro/XP Idêntico à Foto + 19 Kits Completos", "textures/items/trident")
     .button("§aPesquisar no Catálogo Completo do Jogo\\n§r§8Busca em ItemTypes.getAll() (Mace, Ovos, Blocos...)", "textures/items/compass_item")
     .button("§ePegar Item Digitando o ID + Quantidade Livre\\n§r§8Ex: diamond_block, mace, totem_of_undying", "textures/items/book_enchanted")
     .button("§dIr para Teclado de Armaduras & Encantamentos\\n§r§8Pegar armaduras e ferramentas já encantadas", "textures/items/netherite_chestplate")
@@ -1857,12 +1904,14 @@ function openAllItemsMenu(player) {
 
   showFormSafely(player, form, (res) => {
     if (res.selection === 0) {
-      openUniversalItemSearchModal(player);
+      openKitsCenterMenu(player);
     } else if (res.selection === 1) {
-      openDirectIdGiveModal(player);
+      openUniversalItemSearchModal(player);
     } else if (res.selection === 2) {
-      openArmorToolKeypadMenu(player);
+      openDirectIdGiveModal(player);
     } else if (res.selection === 3) {
+      openArmorToolKeypadMenu(player);
+    } else if (res.selection === 4) {
       openCuratedItemCategory(player, "Minérios, Moldes & Blocos Raros", [
         "minecraft:diamond_block",
         "minecraft:netherite_block",
@@ -1883,7 +1932,7 @@ function openAllItemsMenu(player) {
         "minecraft:dragon_egg",
         "minecraft:nether_star"
       ]);
-    } else if (res.selection === 4) {
+    } else if (res.selection === 5) {
       openCuratedItemCategory(player, "Suprimentos, Maçãs & Utilidades", [
         "minecraft:enchanted_golden_apple",
         "minecraft:golden_apple",
@@ -1900,7 +1949,7 @@ function openAllItemsMenu(player) {
         "minecraft:crying_obsidian",
         "minecraft:sponge"
       ]);
-    } else if (res.selection === 5) {
+    } else if (res.selection === 6) {
       openMainMenu(player);
     }
   });
@@ -3854,6 +3903,8 @@ function openMegaChestHallMenu(player) {
       \`§aCatálogo Completo: §e\${totalItemsCount} Blocos, Variações & Itens §aem §b\${allSectors.length} Setores Organizados§a!\`
     )
     .button(\`§l§6[Estilos] Trocar Modelo da Sala de Baú\\n§r§8Atual: \${arch.shortTitle} (Quartzo, Medieval, Bunker, Nether, End)\`, "textures/items/painting")
+    .button("§l§d[NOVA SALA] Mega Armazém de 16 Colunas c/ Shulkers (10 Níveis)\\n§r§816 Colunas × 20 Baús = 320 Baús Duplos c/ Shulkers Cheias + Passarelas", "textures/items/shulker_shell")
+    .button("§l§6[Modo Kits] Sala Galeria com TODOS os 20 Kits (Kit da Foto!)\\n§r§8Constrói Salão com os 20 Kits em Baús Duplos Conectados + Placas", "textures/items/trident")
     .button("§l§d[NOVO] Mega Sala de Encantamentos + 42 Villagers (1 Esmeralda)\\n§r§842 Baús Livros Nv.Máx + 18 Baús Insumos + 42 Villagers", "textures/items/book_enchanted")
     .button(\`§l§a[Modo 1] Armazém Completo (\${allSectors.length} Setores + Todas Variações)\\n§r§8Gera todos os \${totalItemsCount} Baús Duplos na direção \${basis.dirLabelPt}\`, "textures/items/chest_minecart")
     .button("§l§e[Modo 2] Escolher Setor Específico (Com Todas Variações)\\n§r§8Minérios/Cobre, Madeiras, Pedras/Tufo/Ardósia, 16 Cores...", "textures/items/book_enchanted")
@@ -3867,20 +3918,24 @@ function openMegaChestHallMenu(player) {
     if (res.selection === 0) {
       openArchitecturalModelSelector(player);
     } else if (res.selection === 1) {
-      openMegaEnchantmentHallMenu(player);
+      openVerticalColumnsShulkerHallMenu(player);
     } else if (res.selection === 2) {
-      buildAllSectorsMegaWarehouse(player);
+      buildAll20KitsMegaGallery(player);
     } else if (res.selection === 3) {
-      openSectorSelectionMenu(player);
+      openMegaEnchantmentHallMenu(player);
     } else if (res.selection === 4) {
-      buildMega30ChestsPotionHall(player);
+      buildAllSectorsMegaWarehouse(player);
     } else if (res.selection === 5) {
-      buildAllMinecraftItemsInDoubleChests(player);
+      openSectorSelectionMenu(player);
     } else if (res.selection === 6) {
-      buildSameItemDoubleChestHall(player, MEGA_HALL_60_ITEMS, "Top 60 Blocos & Itens Survival");
+      buildMega30ChestsPotionHall(player);
     } else if (res.selection === 7) {
-      spawnDoubleChestOfHandItem(player);
+      buildAllMinecraftItemsInDoubleChests(player);
     } else if (res.selection === 8) {
+      buildSameItemDoubleChestHall(player, MEGA_HALL_60_ITEMS, "Top 60 Blocos & Itens Survival");
+    } else if (res.selection === 9) {
+      spawnDoubleChestOfHandItem(player);
+    } else if (res.selection === 10) {
       openMainMenu(player);
     }
   });
@@ -4643,6 +4698,7 @@ function openBuilderAndSpawnerMenu(player) {
       \`§7Direção atual do olhar: §b\${basis.dirLabelPt}\\n\` +
       "§7Gire a câmera para qualquer lado — toda construção nascerá exatamente na direção para onde você está olhando:"
     )
+    .button("§l§6Central de 20 Kits & Galeria de 20 Baús Duplos\\n§r§8Kit #1 Exato da Foto (Farm Ouro/XP) + Galeria 20 Kits", "textures/items/trident")
     .button("§l§dMega Sala de Encantamentos + 42 Villagers (1 Esmeralda)\\n§r§842 Baús Livros Nv.Máx + 18 Baús Insumos + 42 Villagers", "textures/items/book_enchanted")
     .button("§l§dMega Sala de Poções: 30 Baús Duplos Individuais\\n§r§8Alquimia Completa, Suportes, Caldeirões e 30 Baús Duplos", "textures/items/brewing_stand")
     .button("§l§6Super Fornalha Industrial 16x (Smelter Automático)\\n§r§816 Fornalhas com Funis, Baús de entrada de minérios e saída", "textures/items/blast_furnace")
@@ -4659,14 +4715,16 @@ function openBuilderAndSpawnerMenu(player) {
     const b = getLookBasis(player);
 
     if (res.selection === 0) {
-      openMegaEnchantmentHallMenu(player);
+      openKitsCenterMenu(player);
     } else if (res.selection === 1) {
-      buildMegaPotionBrewingComplex(player);
+      openMegaEnchantmentHallMenu(player);
     } else if (res.selection === 2) {
-      buildMegaIndustrialSmelter(player);
+      buildMegaPotionBrewingComplex(player);
     } else if (res.selection === 3) {
-      openMegaChestHallMenu(player);
+      buildMegaIndustrialSmelter(player);
     } else if (res.selection === 4) {
+      openMegaChestHallMenu(player);
+    } else if (res.selection === 5) {
       try {
         for (let df = -2; df <= 2; df++) {
           for (let dr = -2; dr <= 2; dr++) {
@@ -4690,7 +4748,7 @@ function openBuilderAndSpawnerMenu(player) {
         giveItemSafely(player, "minecraft:lapis_lazuli", 64);
         player.sendMessage(\`§8[§aConstrutor§8] §dAltar de Encantamento Nível 30 gerado na direção §b\${b.dirLabelPt}§d (+64 Lápis-Lazúli)!\`);
       } catch (e) {}
-    } else if (res.selection === 5) {
+    } else if (res.selection === 6) {
       try {
         for (let df = -2; df <= 2; df++) {
           for (let dr = -2; dr <= 2; dr++) {
@@ -4699,7 +4757,7 @@ function openBuilderAndSpawnerMenu(player) {
         }
         player.sendMessage("§8[§aConstrutor§8] §bPlataforma 5x5 de Obsidiana criada sob seus pés!");
       } catch (e) {}
-    } else if (res.selection === 6) {
+    } else if (res.selection === 7) {
       try {
         for (let f = 2; f <= 6; f++) {
           for (let dy = -1; dy <= 3; dy++) {
@@ -4722,11 +4780,11 @@ function openBuilderAndSpawnerMenu(player) {
         player.teleport(b.relTp(4, 0, 0));
         player.sendMessage(\`§8[§aConstrutor§8] §6Abrigo seguro construído na direção §b\${b.dirLabelPt}§6!\`);
       } catch (e) {}
-    } else if (res.selection === 7) {
-      openMobSpawnerCategory(player, false);
     } else if (res.selection === 8) {
-      openMobSpawnerCategory(player, true);
+      openMobSpawnerCategory(player, false);
     } else if (res.selection === 9) {
+      openMobSpawnerCategory(player, true);
+    } else if (res.selection === 10) {
       openMainMenu(player);
     }
   });
@@ -5229,7 +5287,8 @@ function generateVanillaSurvivalLibrarianTradesJson(): string {
 
 export async function buildAndDownloadMcAddon(
   config: AddonConfig,
-  modules: CheatModule[]
+  modules: CheatModule[],
+  importedStructures: ImportedMcStructure[] = []
 ): Promise<{ filename: string; sizeKb: number }> {
   const zip = new JSZip();
   const safeFolder = config.addonName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'SurvivalMenu';
@@ -5250,7 +5309,7 @@ export async function buildAndDownloadMcAddon(
   if (bpFolder) {
     bpFolder.file('manifest.json', generateBpManifest(config));
     bpFolder.file('pack_icon.png', iconBlob);
-    bpFolder.folder('scripts')?.file('main.js', generateMainScript(config, modules));
+    bpFolder.folder('scripts')?.file('main.js', generateMainScript(config, modules, importedStructures));
     const itemsFolder = bpFolder.folder('items');
     itemsFolder?.file('survival_menu.json', generateCustomItemJson());
     itemsFolder?.file('martelo_50x50.json', generateMartelo50x50ItemJson());
@@ -5264,6 +5323,13 @@ export async function buildAndDownloadMcAddon(
     recipesFolder?.file('quebrador_bedrock_recipe.json', generateQuebradorBedrockRecipeJson());
     recipesFolder?.file('multiplicador_rapido_recipe.json', generateMultiplierFastRecipeJson());
     recipesFolder?.file('multiplicador_bancada_recipe.json', generateMultiplierBenchRecipeJson());
+
+    if (importedStructures.length > 0) {
+      const structFolder = bpFolder.folder('structures');
+      for (const st of importedStructures) {
+        structFolder?.file(`${st.id}.mcstructure`, st.rawBytes);
+      }
+    }
 
     bpFolder
       .folder('trading/economy_trades')
@@ -5336,7 +5402,8 @@ export async function buildAndDownloadMcAddon(
 export async function downloadIndividualMcPack(
   config: AddonConfig,
   modules: CheatModule[],
-  packType: 'bp' | 'rp'
+  packType: 'bp' | 'rp',
+  importedStructures: ImportedMcStructure[] = []
 ): Promise<{ filename: string; sizeKb: number }> {
   const zip = new JSZip();
   const safeFolder = config.addonName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'SurvivalMenu';
@@ -5353,7 +5420,7 @@ export async function downloadIndividualMcPack(
   if (packType === 'bp') {
     zip.file('manifest.json', generateBpManifest(config));
     zip.file('pack_icon.png', iconBlob);
-    zip.folder('scripts')?.file('main.js', generateMainScript(config, modules));
+    zip.folder('scripts')?.file('main.js', generateMainScript(config, modules, importedStructures));
     const itemsFolder = zip.folder('items');
     itemsFolder?.file('survival_menu.json', generateCustomItemJson());
     itemsFolder?.file('martelo_50x50.json', generateMartelo50x50ItemJson());
@@ -5367,6 +5434,13 @@ export async function downloadIndividualMcPack(
     recipesFolder?.file('quebrador_bedrock_recipe.json', generateQuebradorBedrockRecipeJson());
     recipesFolder?.file('multiplicador_rapido_recipe.json', generateMultiplierFastRecipeJson());
     recipesFolder?.file('multiplicador_bancada_recipe.json', generateMultiplierBenchRecipeJson());
+
+    if (importedStructures.length > 0) {
+      const structFolder = zip.folder('structures');
+      for (const st of importedStructures) {
+        structFolder?.file(`${st.id}.mcstructure`, st.rawBytes);
+      }
+    }
 
     zip
       .folder('trading/economy_trades')
@@ -5436,7 +5510,8 @@ export async function downloadIndividualMcPack(
 
 export async function downloadManualZipFolder(
   config: AddonConfig,
-  modules: CheatModule[]
+  modules: CheatModule[],
+  importedStructures: ImportedMcStructure[] = []
 ): Promise<{ filename: string; sizeKb: number }> {
   const zip = new JSZip();
   const safeFolder = config.addonName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'SurvivalMenu';
@@ -5456,7 +5531,7 @@ export async function downloadManualZipFolder(
   if (bpFolder) {
     bpFolder.file('manifest.json', generateBpManifest(config));
     bpFolder.file('pack_icon.png', iconBlob);
-    bpFolder.folder('scripts')?.file('main.js', generateMainScript(config, modules));
+    bpFolder.folder('scripts')?.file('main.js', generateMainScript(config, modules, importedStructures));
     const itemsFolder = bpFolder.folder('items');
     itemsFolder?.file('survival_menu.json', generateCustomItemJson());
     itemsFolder?.file('martelo_50x50.json', generateMartelo50x50ItemJson());
@@ -5470,6 +5545,13 @@ export async function downloadManualZipFolder(
     recipesFolder?.file('quebrador_bedrock_recipe.json', generateQuebradorBedrockRecipeJson());
     recipesFolder?.file('multiplicador_rapido_recipe.json', generateMultiplierFastRecipeJson());
     recipesFolder?.file('multiplicador_bancada_recipe.json', generateMultiplierBenchRecipeJson());
+
+    if (importedStructures.length > 0) {
+      const structFolder = bpFolder.folder('structures');
+      for (const st of importedStructures) {
+        structFolder?.file(`${st.id}.mcstructure`, st.rawBytes);
+      }
+    }
 
     bpFolder
       .folder('trading/economy_trades')
